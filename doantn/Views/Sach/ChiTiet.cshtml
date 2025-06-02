@@ -10,8 +10,6 @@
     .GroupBy(f => f.LoaiFile.Trim().ToLower())
     .ToDictionary(g => g.Key, g => g.First());
 }
-
-
 <div class="book-detail-container">
     <div class="book-left">
         <img src="@Model.Anh" alt="@Model.TenSach" />
@@ -319,10 +317,8 @@ else
         }
 
         var userIsLoggedIn = @(Context.Session.GetString("MaKhachHang") != null ? "true" : "false");
-
+        console.log("userIsLoggedIn =", userIsLoggedIn);
         document.getElementById("btnGoTuSach").addEventListener("click", async function (e) {
-            const userIsLoggedIn = @(Context.Session.GetString("MaKhachHang") != null ? "true" : "false") === "true";
-
             if (!userIsLoggedIn) {
                 e.preventDefault();
                 const returnUrl = encodeURIComponent('/TuSach');

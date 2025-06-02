@@ -271,7 +271,6 @@
         }
 
         
-
         function loadBookmarks() {
             fetch('/BookMark/GetBookmarks?maSach=@Model.MaSach')
                 .then(response => response.json())
@@ -411,7 +410,6 @@
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
         }
-
         
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
