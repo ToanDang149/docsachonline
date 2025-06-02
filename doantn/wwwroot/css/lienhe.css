@@ -1,0 +1,83 @@
+﻿.lienhe-container {
+    max-width: 700px;
+    margin: 30px auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+    .lienhe-container h2 {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .lienhe-container p {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+    }
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.btn-lienhe {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 25px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    display: block;
+    margin: 20px auto 0;
+}
+
+.lienhe-extra {
+    margin-top: 30px;
+    text-align: left;
+    font-size: 15px;
+}
+
+    .lienhe-extra p {
+        text-align: center;
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+
+.contact-icon-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+    gap: 10px;
+}
+
+.icon-facebook {
+    color: #3b5998;
+    font-size: 18px;
+}
+
+.icon-google {
+    color: #db4437;
+    font-size: 18px;
+}
+
+.contact-icon-row a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+    .contact-icon-row a:hover {
+        text-decoration: underline;
+    }
+

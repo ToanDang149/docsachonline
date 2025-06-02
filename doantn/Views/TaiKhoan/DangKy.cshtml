@@ -1,0 +1,198 @@
+﻿@model doantn.ViewModel.DangKyViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutGuest.cshtml";
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="register-container">
+    <div class="form-box">
+        <h2>Đăng ký</h2>
+        <form asp-action="DangKy" method="post">
+            <div class="input-box">
+                <span class="icon"><i class="fas fa-user"></i></span>
+                <input asp-for="HoTen" placeholder="Họ tên" />
+                <span asp-validation-for="HoTen" class="text-danger"></span>
+            </div>
+            <div class="input-box">
+                <span class="icon"><i class="fas fa-envelope"></i></span>
+                <input asp-for="Email" placeholder="Email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="input-box">
+                <span class="icon"><i class="fas fa-phone"></i></span>
+                <input asp-for="SoDT" placeholder="Số điện thoại" />
+                <span asp-validation-for="SoDT" class="text-danger"></span>
+            </div>
+            <div class="input-box">
+                <span class="icon"><i class="fas fa-id-card"></i></span>
+                <input asp-for="TaiKhoan" placeholder="Tài khoản" />
+                <span asp-validation-for="TaiKhoan" class="text-danger"></span>
+            </div>
+            <div class="input-box">
+                <span class="icon"><i class="fas fa-lock"></i></span>
+                <input asp-for="MatKhau" type="password" placeholder="Mật khẩu" />
+                <span asp-validation-for="MatKhau" class="text-danger"></span>
+            </div>
+            <div class="input-box">
+                <span class="icon"><i class="fas fa-lock"></i></span>
+                <input asp-for="XacNhanMatKhau" type="password" placeholder="Xác nhận lại mật khẩu" />
+                <span asp-validation-for="XacNhanMatKhau" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label><strong>Giới tính</strong></label><br />
+                <div class="form-check form-check-inline">
+                    <input asp-for="GioiTinh" class="form-check-input" type="radio" value="1" />
+                    <label class="form-check-label">Nam</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input asp-for="GioiTinh" class="form-check-input" type="radio" value="0" />
+                    <label class="form-check-label">Nữ</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input asp-for="GioiTinh" class="form-check-input" type="radio" value="2" />
+                    <label class="form-check-label">Khác</label>
+                </div>
+                <span asp-validation-for="GioiTinh" class="text-danger d-block"></span>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="agree" required>
+                <label class="form-check-label" for="agree">
+                    Tôi đồng ý với tất cả <a href="#">điều khoản</a>
+                </label>
+            </div>
+            <button type="submit" class="btn-register">Đăng ký</button>
+        </form>
+    </div>
+    <div class="divider"></div>
+    <div class="image-box">
+        <img src="~/images/logo.png" alt="Illustration" />
+        <div class="already-member">
+            <a href="/TaiKhoan/DangNhap">Đăng nhập</a>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/dangky.css" />
+}
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector("form");
+
+            const hoTenInput = document.querySelector('input[name="HoTen"]');
+            const emailInput = document.querySelector('input[name="Email"]');
+            const taiKhoanInput = document.querySelector('input[name="TaiKhoan"]');
+            const matKhauInput = document.querySelector('input[name="MatKhau"]');
+            const soDTInput = document.querySelector('input[name="SoDT"]');
+
+            form.addEventListener("submit", function (e) {
+                const hoTen = hoTenInput.value.trim();
+                const email = emailInput.value.trim();
+                const taiKhoan = taiKhoanInput.value.trim();
+                const matKhau = matKhauInput.value;
+                const soDT = soDTInput.value.trim();
+                const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+                if (/\d/.test(hoTen)) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Họ tên không hợp lệ',
+                        text: 'Họ tên không được chứa số. Vui lòng nhập lại!',
+                        confirmButtonColor: '#2e7d32'
+                    });
+                    hoTenInput.focus();
+                    return;
+                }
+
+                if (!emailRegex.test(email)) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Email không hợp lệ',
+                        text: 'Vui lòng nhập đúng định dạng email (ví dụ: example@gmail.com)',
+                        confirmButtonColor: '#2e7d32'
+                    });
+                    emailInput.focus();
+                    return;
+                }
+
+                if (taiKhoan.length < 5) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tài khoản quá ngắn',
+                        text: 'Tài khoản phải có ít nhất 5 ký tự.',
+                        confirmButtonColor: '#2e7d32'
+                    });
+                    taiKhoanInput.focus();
+                    return;
+                }
+
+                if (matKhau.length < 6) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Mật khẩu quá ngắn',
+                        text: 'Mật khẩu phải có ít nhất 6 ký tự.',
+                        confirmButtonColor: '#2e7d32'
+                    });
+                    matKhauInput.focus();
+                    return;
+                }
+
+                if (!/^\d+$/.test(soDT)) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Số điện thoại không hợp lệ',
+                        text: 'Số điện thoại chỉ được chứa chữ số.',
+                        confirmButtonColor: '#2e7d32'
+                    });
+                    soDTInput.focus();
+                    return;
+                }
+
+                if (soDT.length < 9 || soDT.length > 10) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Số điện thoại không hợp lệ',
+                        text: 'Số điện thoại phải có từ 9 đến 10 chữ số.',
+                        confirmButtonColor: '#2e7d32'
+                    });
+                    soDTInput.focus();
+                    return;
+                }
+            });
+            @if (TempData["DangKyError"] != null)
+            {
+                <text>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Đăng ký thất bại',
+                        text: '@Html.Raw(TempData["DangKyError"])',
+                        confirmButtonColor: '#2e7d32'
+                    });
+                </text>
+            }
+
+            @if (TempData["DangKySuccess"] != null)
+            {
+                <text>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đăng ký thành công!',
+                        text: '@Html.Raw(TempData["DangKySuccess"])',
+                        confirmButtonColor: '#2e7d32',
+                        timer: 3000,
+                        willClose: () => {
+                            window.location.href = '/TaiKhoan/DangNhap';
+                        }
+                    });
+                </text>
+            }
+        });
+    </script>
+}
+

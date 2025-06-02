@@ -1,0 +1,228 @@
+﻿@using doantn.ViewModel
+@model TrangChuViewModel
+
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+<div class="banner-wrapper">
+    <img src="~/images/banner.jpg" class="banner-img" alt="Banner">
+    <div class="banner-overlay">
+        <h2><span id="ebookCounter">0</span>+ Ebook với đa dạng chủ đề, đã được cập nhật lên hệ thống</h2>
+        <p>Cùng với hơn <strong>6,500+</strong> bạn đọc truy cập hàng tháng khác.!</p>
+        <div class="banner-buttons">
+            <a href="/ThuVien" class="btn gradient-pink">Vào thư viện →</a>
+            <a href="/LienHe/Index" class="btn gradient-red">Liên hệ ★</a>
+        </div>
+    </div>
+</div>
+<div class="feature-boxes">
+    <div class="feature">
+        <img src="/images/icon1.png" alt="Thể loại">
+        <p><strong>Thể loại đa dạng</strong><br />Sưu tầm từ nhiều nguồn</p>
+    </div>
+    <div class="feature">
+        <img src="/images/icon2.png" alt="Cập nhật">
+        <p><strong>Cập nhật liên tục</strong><br />Hỗ trợ update trọn đời</p>
+    </div>
+    <div class="feature">
+        <img src="/images/icon3.png" alt="Ebook mới">
+        <p><strong>Thêm mới ebook</strong><br />Liên tục hàng tuần</p>
+    </div>
+    <div class="feature">
+        <img src="/images/icon4.png" alt="Tải nhanh">
+        <p><strong>Tải về nhanh chóng</strong><br />Linh hoạt, bảo mật</p>
+    </div>
+</div>
+<div class="bang1">
+    <h2 class="section-title">Top eBook tải nhiều</h2>
+    <p class="section-subtitle">Tổng hợp những eBook tải về nhiều nhất trong tháng.</p>
+    <div class="book-grid">
+        @foreach (var book in Model.EbookTaiNhieu.Take(10))
+        {
+            <a asp-controller="Sach" asp-action="ChiTiet" asp-route-maSach="@book.MaSach" class="book-card" data-masach="@book.MaSach">
+                <img src="@book.Anh" alt="@book.TenSach" />
+                <div class="book-stats">
+                    <span class="views">
+                        <i class="fa fa-eye"></i> @book.LuotXem xem
+                    </span>
+                    <span class="downloads">
+                        <i class="fa fa-download"></i> @book.LuotTai
+                    </span>
+                </div>
+                <div class="book-label">@book.TenLoai</div>
+                <h4 class="book-title">@book.TenSach</h4>
+
+
+                <div class="book-hover-info">
+                    <div class="hover-content">
+                        <div class="hover-left">
+                            <img class="hover-img" src="" alt="Ảnh sách" />
+                        </div>
+                        <div class="hover-right">
+                            <h3 class="hover-title">Tên sách</h3>
+                            <div class="hover-author">Tác giả: <span class="hover-author-name"></span></div>
+                            <div class="hover-stats">
+                                <div class="stat-button view">
+                                    <i class="fa fa-eye"></i> <span class="hover-luotxem">0</span>
+                                </div>
+                                <div class="stat-button download">
+                                    <i class="fa fa-download"></i> <span class="hover-luottai">0</span>
+                                </div>
+                            </div>
+                            <div class="hover-rating">
+                                <span class="rating-star"><span class="hover-trungbinhsao">1</span><i class="fa fa-star"></i> </span>
+                                <span class="rating-count">( <span class="hover-soluongdanhgia">1</span> đánh giá )</span>
+                            </div>
+                            <p class="hover-description">Giới thiệu sách...</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+    <div class="see-more-wrapper">
+        <a href="/Ebook/TaiNhieu" class="see-more-btn">
+            <i class="fas fa-play icon"></i> Xem thêm <strong>EBOOK TẢI NHIỀU</strong>
+        </a>
+    </div>
+</div>
+
+<div class="ds2">
+    <h2 class="section-title">Các eBook mới</h2>
+    <p class="section-subtitle">Dưới đây là một số eBook mới tổng hợp, mới bạn đọc thưởng sách.</p>
+    <div class="book-grid">
+        @foreach (var book in Model.EbookMoi.Take(10))
+        {
+            <a asp-controller="Sach" asp-action="ChiTiet" asp-route-maSach="@book.MaSach" class="book-card" data-masach="@book.MaSach">
+                <img src="@book.Anh" alt="@book.TenSach" />
+                <div class="book-stats">
+                    <span class="views">
+                        <i class="fa fa-eye"></i> @book.LuotXem xem
+                    </span>
+                    <span class="downloads">
+                        <i class="fa fa-download"></i> @book.LuotTai
+                    </span>
+                </div>
+                <div class="book-label">@book.TenLoai</div>
+                <h4 class="book-title">@book.TenSach</h4>
+
+                <div class="book-hover-info">
+                    <div class="hover-content">
+                        <div class="hover-left">
+                            <img class="hover-img" src="" alt="Ảnh sách" />
+                        </div>
+                        <div class="hover-right">
+                            <h3 class="hover-title">Tên sách</h3>
+                            <div class="hover-author">Tác giả: <span class="hover-author-name"></span></div>
+                            <div class="hover-stats">
+                                <div class="stat-button view">
+                                    <i class="fa fa-eye"></i> <span class="hover-luotxem">0</span>
+                                </div>
+                                <div class="stat-button download">
+                                    <i class="fa fa-download"></i> <span class="hover-luottai">0</span>
+                                </div>
+                            </div>
+                            <div class="hover-rating">
+                                <span class="rating-star"><span class="hover-trungbinhsao">1</span><i class="fa fa-star"></i> </span>
+                                <span class="rating-count">( <span class="hover-soluongdanhgia">1</span> đánh giá )</span>
+                            </div>
+                            <p class="hover-description">Giới thiệu sách...</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+    <div class="see-more-wrapper">
+        <a href="/Ebook/Moi" class="see-more-btn">
+            <i class="fas fa-play icon"></i> Xem thêm <strong>EBOOK MỚI</strong>
+        </a>
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/trangchu.css" />
+    <link rel="stylesheet" href="~/css/popuo.css" />
+}
+<script>
+    document.querySelectorAll('.book-card').forEach(card => {
+        const popup = card.querySelector('.book-hover-info');
+        card.addEventListener('mouseenter', async function () {
+            const maSach = this.dataset.masach;
+            if (!maSach) return;
+            const rect = this.getBoundingClientRect();
+            const spaceRight = window.innerWidth - rect.right;
+            const popupWidth = 400;
+            if (spaceRight < popupWidth + 20) {
+                popup.style.left = 'auto';
+                popup.style.right = '105%';
+            } else {
+                popup.style.right = 'auto';
+                popup.style.left = '105%';
+            }
+            if (!this.dataset.loaded) {
+                try {
+                    const response = await fetch(`/Home/GetSachChiTiet?maSach=${maSach}`);
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        popup.querySelector('.hover-img').src = data.anh || '/images/default.png';
+                        popup.querySelector('.hover-title').innerText = data.tenSach || 'Không có tên';
+                        popup.querySelector('.hover-author-name').innerText = data.tenTacGia || 'Không rõ';
+                        popup.querySelector('.hover-luotxem').innerText = data.luotXem || '0';
+                        popup.querySelector('.hover-luottai').innerText = data.luotTai || '0';
+                        popup.querySelector('.hover-trungbinhsao').innerText = data.trungBinhSao || '0';
+                        popup.querySelector('.hover-soluongdanhgia').innerText = data.soLuongDanhGia || '0';
+                        popup.querySelector('.hover-description').innerText = (data.gioiThieu || '').substring(0, 200) + "...";
+
+                        this.dataset.loaded = "true";
+                    }
+                } catch (error) {
+                    console.error('Không thể lấy chi tiết sách:', error);
+                }
+            }
+            popup.style.display = 'flex';
+            popup.style.transition = 'opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease';
+            popup.style.opacity = '1';
+            popup.style.visibility = 'visible';
+            popup.style.transform = 'translateX(0) scale(1)';
+        });
+        card.addEventListener('mouseleave', function () {
+            const popup = this.querySelector('.book-hover-info');
+            popup.style.display = 'none';
+            popup.style.transition = 'none';
+            popup.style.opacity = '0';
+            popup.style.visibility = 'hidden';
+            popup.style.transform = 'translateX(20px) scale(0.95)';
+        });
+        popup.addEventListener('mouseenter', function (e) {
+            popup.style.display = 'flex';
+            popup.style.transition = 'none';
+            popup.style.opacity = '0';
+            popup.style.visibility = 'hidden';
+            popup.style.transform = 'translateX(20px) scale(0.95)';
+            e.stopPropagation(); 
+        });
+    });
+
+    function DemSo(element, target, duration) {
+        let start = 0;
+        let startTime = null;
+
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = timestamp - startTime;
+            const current = Math.min(Math.floor((progress / duration) * target), target);
+            element.innerText = current.toLocaleString();
+            if (current < target) {
+                window.requestAnimationFrame(step);
+            } else {
+                element.innerText = target.toLocaleString();
+            }
+        }
+        window.requestAnimationFrame(step);
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        const counter = document.getElementById("ebookCounter");
+        DemSo(counter, 15000, 2000); 
+    });
+</script>

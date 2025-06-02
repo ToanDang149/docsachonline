@@ -1,0 +1,106 @@
+﻿.review-form, .review-section {
+    background: #fff;
+    padding: 25px 30px;
+    margin-top: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.review-title {
+    color: #28a745;
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 20px;
+    border-left: 4px solid #28a745;
+    padding-left: 12px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    padding-bottom: 10px;
+}
+
+#rating-stars {
+    margin-top: 10px;
+}
+
+#rating-stars i {
+    font-size: 30px;
+    color: #ccc;
+    cursor: pointer;
+    margin-right: 5px;
+    transition: color 0.2s;
+}
+
+#rating-stars i.hover,
+#rating-stars i.selected {
+    color: #ffc107;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+.btn-submit {
+    background: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-submit:hover {
+    background: #1e7e34;
+}
+
+.review-item {
+    border-bottom: 1px solid #eee;
+    padding: 20px 0;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.review-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.review-stars-inline i {
+    font-size: 14px; 
+    color: #ccc;
+}
+
+.review-stars-inline .filled {
+    color: #ffc107;
+}
+
+.review-date {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.review-content {
+    font-size: 15px;
+    color: #555;
+}
+.chuadn{
+    padding: 20px 20px;
+}

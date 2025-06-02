@@ -1,0 +1,381 @@
+﻿@{
+    ViewData["Title"] = "Thống kê lượt xem sách";
+    var maSach = ViewData["MaSach"];
+    var thoiGianCatNhap = ViewData["ThoiGianCatNhap"];
+    var now = ViewData["Now"];
+}
+
+<h2 class="thongke-title text-center">Thống kê lượt xem và tải sách</h2>
+
+<div class="thongke-container d-flex text-center justify-content-between align-items-center mb-4 flex-wrap">
+    <div class="thongke-item flex-fill">
+        <div class="number">@ViewBag.TongLuotXem</div>
+        <div class="label">Tổng lượt xem</div>
+    </div>
+    <div class="thongke-item flex-fill">
+        <div class="number">@ViewBag.TongLuotTai</div>
+        <div class="label">Tổng lượt tải</div>
+    </div>
+    <div class="thongke-item flex-fill">
+        <div class="number">@ViewBag.LuotXemCaoNhatThang</div>
+        <div class="label">Xem nhiều nhất tháng: @ViewBag.ThangXemCaoNhat</div>
+    </div>
+    <div class="thongke-item flex-fill">
+        <div class="number">@ViewBag.LuotTaiCaoNhatThang</div>
+        <div class="label">Tải nhiều nhất tháng: @ViewBag.ThangTaiCaoNhat</div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap mb-4 px-2">
+    <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-moc" data-range="48h" onclick="chonMoc(this, '48h')">48h</button>
+        <button class="btn btn-moc" data-range="1w" onclick="chonMoc(this, '1w')">1 tuần</button>
+        <button class="btn btn-moc" data-range="1m" onclick="chonMoc(this, '1m')">1 tháng</button>
+        <button class="btn btn-moc" data-range="3m" onclick="chonMoc(this, '3m')">3 tháng</button>
+        <button class="btn btn-moc" data-range="1y" onclick="chonMoc(this, '1y')">1 năm</button>
+        <button class="btn btn-moc" data-range="max" onclick="chonMoc(this, 'max')">Tất cả</button>
+    </div>
+
+    <div class="d-flex align-items-center flex-wrap gap-2">
+        <label class="form-label mb-0">Từ</label>
+        <input type="text" id="fromDate" class="form-control d-inline-block w-auto" style="width: 130px;" placeholder="dd/mm/yyyy" />
+
+        <label class="form-label mb-0">đến</label>
+        <input type="text" id="toDate" class="form-control d-inline-block w-auto" style="width: 130px;" placeholder="dd/mm/yyyy" />
+
+        <button class="btn btn-success" onclick="locTheoNgay()">Lọc</button>
+    </div>
+</div>
+<canvas id="viewChart" height="100"></canvas>
+<h5 class="mt-4">Đánh giá sách</h5>
+<div class="d-flex align-items-center">
+    <div class="text-center me-4">
+        <div style="font-size: 42px; font-weight: bold;">@ViewBag.DiemTrungBinh.ToString("0.0")</div>
+        <div class="text-success mb-1">
+            @for (int i = 1; i <= 5; i++)
+            {
+                <i class="fa fa-star@(i <= Math.Floor((double)ViewBag.DiemTrungBinh) ? "" : "-o")"></i>
+            }
+        </div>
+        <div>@ViewBag.TongDanhGia đánh giá</div>
+    </div>
+
+    <div class="flex-grow-1">
+        @for (int star = 5; star >= 1; star--)
+        {
+            int count = ViewBag.StarCounts.ContainsKey(star) ? ViewBag.StarCounts[star] : 0;
+            double width = ViewBag.MaxStar > 0 ? (count * 100.0 / (double)ViewBag.MaxStar) : 0;
+
+            <div class="d-flex align-items-center mb-1">
+                <span class="me-1" style="width: 20px;">@star</span>
+                <div class="progress flex-grow-1" style="height: 10px;">
+                    <div class="progress-bar bg-success" style="width: @width%"></div>
+                </div>
+                <span class="ms-2">@count</span>
+            </div>
+        }
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/ThongKe.css" />
+}
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-crosshair@1.2.0/dist/chartjs-plugin-crosshair.min.js"></script>
+    <script>
+        Chart.register({
+            id: 'customTicksMarker',
+            afterDraw(chart, args, options) {
+                if (!options.enabled) return;
+                const { ctx, scales: { x, y } } = chart;
+
+                x.ticks.forEach((tick, i) => {
+                    const xCoord = x.getPixelForTick(i);
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(xCoord, y.bottom);
+                    ctx.lineTo(xCoord, y.bottom + 6);
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = '#666';
+                    ctx.stroke();
+                    ctx.restore();
+                });
+            }
+        });
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.ChartCrosshair) {
+                Chart.register(window.ChartCrosshair);
+            }
+        });        
+
+        const maSach = '@maSach';
+        const thoiGianCatNhap = new Date('@thoiGianCatNhap');
+        const now = new Date('@now');
+
+        let viewChart;
+
+        function renderBieuDo(data) {
+            const maxY = Math.max(...data.map(item => Math.max(item.soLuotXem, item.soLuotTai)));
+            const labels = data.map(item =>
+                new Intl.DateTimeFormat('vi-VN').format(new Date(item.ngay))
+            );
+            const xemValues = data.map(item => item.soLuotXem);
+            const taiValues = data.map(item => item.soLuotTai);
+
+            if (viewChart) viewChart.destroy();
+
+            const ctx = document.getElementById('viewChart').getContext('2d');
+
+            const xemGradient = ctx.createLinearGradient(0, 0, 0, 200);
+            xemGradient.addColorStop(0, 'rgba(0, 123, 255, 0.4)');
+            xemGradient.addColorStop(1, 'rgba(0, 123, 255, 0.05)');
+
+            const taiGradient = ctx.createLinearGradient(0, 0, 0, 200);
+            taiGradient.addColorStop(0, 'rgba(40, 167, 69, 0.4)');
+            taiGradient.addColorStop(1, 'rgba(40, 167, 69, 0.05)');
+
+            viewChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Lượt xem',
+                            data: xemValues,
+                            fill: true,
+                            backgroundColor: xemGradient,
+                            borderColor: 'rgba(0, 123, 255, 1)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: 'white',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: 'Lượt tải',
+                            data: taiValues,
+                            fill: true,
+                            backgroundColor: taiGradient,
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: 'white',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    interaction: {
+                        mode: 'index',
+                        axis: 'x',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 14 },
+                                usePointStyle: true,
+                                pointStyle: 'rect',
+                                color: '#333'
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#1f1f1f',
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            padding: 10,
+                            borderColor: '#ccc',
+                            borderWidth: 1,
+                            displayColors: false
+                        },
+                        crosshair: {
+                            line: { color: 'rgba(0, 123, 255, 0.2)', width: 10 },
+                            sync: { enabled: false },
+                            zoom: { enabled: false },
+                            snap: false
+                        },
+                        customTicksMarker: {
+                            enabled: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            title: { display: true, text: 'Ngày' },
+                            ticks: {
+                                color: '#555',
+                                font: { size: 12 },
+                                autoSkip: true,
+                                maxTicksLimit: 9
+                            }
+                        },
+                        y: {
+                            max: maxY + 1,
+                            beginAtZero: true,
+                            title: { display: true, text: 'Số lượt' },
+                            grid: {
+                                color: '#eee',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#444',
+                                font: { size: 12 },
+                                stepSize: 1,
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initTimeButtons() {
+            const diffMs = now - thoiGianCatNhap;
+            const diffDays = diffMs / (1000 * 60 * 60 * 24);
+            const diffHours = diffMs / (1000 * 60 * 60);
+            const timeMap = {
+                '1w': 7,
+                '1m': 30,
+                '3m': 90,
+                '1y': 365
+            };
+            for (const [key, days] of Object.entries(timeMap)) {
+                const btn = document.querySelector(`button[data-range="${key}"]`);
+                if (diffDays < days && btn) {
+                    btn.disabled = true;
+                    btn.classList.add('btn-secondary');
+                }
+            }
+        }
+        function chonMoc(button, type) {
+            document.querySelectorAll('.btn-moc').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            loadThongKeXem(type);
+        }
+
+        function loadThongKeXem(type) {
+            document.getElementById("fromDate")._flatpickr?.clear();
+            document.getElementById("toDate")._flatpickr?.clear();
+            const diffMs = now - thoiGianCatNhap;
+            const diffHours = diffMs / (1000 * 60 * 60);
+
+            let fromDate = null;
+            switch (type) {
+                case '48h':
+                    fromDate = diffHours < 48 ? thoiGianCatNhap : new Date(now);
+                    fromDate.setDate(fromDate.getDate() - 2);
+                    break;
+                case '1w':
+                    fromDate = new Date(now);
+                    fromDate.setDate(fromDate.getDate() - 6);
+                    break;
+                case '1m':
+                    fromDate = new Date(now);
+                    fromDate.setMonth(now.getMonth() - 1);
+                    break;
+                case '3m':
+                    fromDate = new Date(now);
+                    fromDate.setMonth(now.getMonth() - 3);
+                    break;
+                case '1y':
+                    fromDate = new Date(now);
+                    fromDate.setFullYear(now.getFullYear() - 1);
+                    break;
+                case 'max':
+                    fromDate = null;
+                    break;
+            }
+
+            const fromQuery = fromDate ? fromDate.toISOString() : '';
+
+            fetch(`/ThongKe/GetLuotXemVaTai?maSach=${maSach}&from=${fromQuery}`)
+                .then(res => res.json())
+                .then(data => renderBieuDo(data));
+        }
+
+        function locTheoNgay() {
+            const from = document.getElementById("fromDate").value;
+            const to = document.getElementById("toDate").value;
+
+            const minDate = new Date('@thoiGianCatNhap');
+            const maxDate = new Date('@now');
+
+            if (!from || !to) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Thiếu thông tin',
+                    text: 'Vui lòng chọn đầy đủ ngày bắt đầu và kết thúc.',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'swal-button-blue' }
+                });
+                return;
+            }
+
+            const fromDate = new Date(from);
+            const toDate = new Date(to);
+
+            if (fromDate > toDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không hợp lệ',
+                    text: 'Ngày bắt đầu không được lớn hơn ngày kết thúc.',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'swal-button-blue' }
+                });
+                return;
+            }
+
+            if (fromDate < minDate || toDate > maxDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không hợp lệ',
+                    html: `Chỉ được chọn ngày trong khoảng từ <b>${minDate.toLocaleDateString()}</b> đến <b>${maxDate.toLocaleDateString()}</b>.`,
+                    customClass: { confirmButton: 'swal-button-blue' }
+                });
+                return;
+            }
+            document.querySelectorAll('.btn-moc').forEach(btn => btn.classList.remove('active'));
+            const fromQuery = new Date(from).toISOString();
+            const toQuery = new Date(to).toISOString();
+
+            fetch(`/ThongKe/GetLuotXemVaTai?maSach=${maSach}&from=${fromQuery}&to=${toQuery}`)
+                .then(res => res.json())
+                .then(data => renderBieuDo(data));
+        }
+        window.onload = () => {
+            initTimeButtons(); 
+            loadThongKeXem('48h');
+        };
+        const fromPicker = flatpickr("#fromDate", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            defaultDate: "@(((DateTime)thoiGianCatNhap).ToString("yyyy-MM-dd"))",
+            minDate: "@(((DateTime)thoiGianCatNhap).ToString("yyyy-MM-dd"))",
+            maxDate: "@(((DateTime)now).ToString("yyyy-MM-dd"))"
+        });
+        fromPicker.altInput.placeholder = "dd/mm/yyyy";
+
+        const toPicker = flatpickr("#toDate", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            defaultDate: "@(((DateTime)now).ToString("yyyy-MM-dd"))",
+            minDate: "@(((DateTime)thoiGianCatNhap).ToString("yyyy-MM-dd"))",
+            maxDate: "@(((DateTime)now).ToString("yyyy-MM-dd"))"
+        });
+        toPicker.altInput.placeholder = "dd/mm/yyyy";
+    </script>
+}

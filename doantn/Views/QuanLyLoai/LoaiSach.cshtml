@@ -1,0 +1,268 @@
+﻿@model List<doantn.ViewModel.LoaiQuanLyViewModel>
+
+<div class="page-header">
+    <h2>Quản lý loại sách</h2>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Tên loại sách</th>
+                <th>Chức năng</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                int stt = 1;
+                foreach (var loai in Model)
+                {
+                    <tr>
+                        <td>@stt</td>
+                        <td class="ten-sach">@loai.TenLoai</td>
+                        <td>
+                            <a href="javascript:void(0)" onclick="openModalSuaLoai('@loai.MaLoai', '@loai.TenLoai')"
+                               class="btn btn-sm btn-edit">
+                                <i class="fa-solid fa-pen"></i> Sửa
+                            </a>
+                            <a href="javascript:void(0)" onclick="xoaLoaiSach('@loai.MaLoai', '@loai.TenLoai')"
+                               class="btn btn-sm btn-delete">
+                                <i class="fa-solid fa-trash"></i> Xóa
+                            </a>
+                        </td>
+                    </tr>
+                    stt++;
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="3" class="text-center">Không có loại sách nào.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<!-- Modal Thêm Loại Sách -->
+<div class="modal fade" id="modalThemLoai" tabindex="-1" aria-labelledby="modalThemLoaiLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formThemLoai">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalThemLoaiLabel">Thêm loại sách</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên loại sách</label>
+                        <input type="text" name="TenLoai" id="tenLoaiMoi" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Modal Sửa Loại Sách -->
+<div class="modal fade" id="modalSuaLoai" tabindex="-1" aria-labelledby="modalSuaLoaiLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formSuaLoai">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalSuaLoaiLabel">Chỉnh sửa loại sách</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="maLoaiSua" name="MaLoai" />
+                    <div class="mb-3">
+                        <label class="form-label">Tên loại sách</label>
+                        <input type="text" id="tenLoaiSua" name="TenLoai" class="form-control"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/quanly.css" />
+    <link rel="stylesheet" href="~/css/quanlyloai.css" />
+}
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.table').DataTable({
+                lengthChange: false,
+                searching: true,
+                info: false,
+                paging: true,
+                pageLength: 10,
+                language: {
+                    search: "Tìm kiếm:",
+                    searchPlaceholder: "Nhập tên loại sách...",
+                    paginate: {
+                        previous: "<i class='fa-solid fa-chevron-left'></i>",
+                        next: "<i class='fa-solid fa-chevron-right'></i>"
+                    },
+                    zeroRecords: "Không tìm thấy loại sách phù hợp",
+                }
+            });
+
+            $(".dataTables_filter").append(`
+                <button type="button" class="btn-add-new" onclick="openModalThemLoai()">
+                    <i class="fa-solid fa-plus"></i> Thêm mới
+                </button>
+            `);
+        });
+        function openModalThemLoai() {
+            $('#tenLoaiMoi').val('');
+            $('#modalThemLoai').modal('show');
+        }
+
+        $('#formThemLoai').submit(function (e) {
+            e.preventDefault();
+            const tenLoai = $('#tenLoaiMoi').val().trim();
+            if (!tenLoai) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Thiếu thông tin',
+                    text: 'Tên loại sách không được để trống.'
+                });
+                return;
+            }
+
+            $.ajax({
+                url: '/QuanLyLoai/ThemLoaiSach',
+                method: 'POST',
+                data: { tenLoai },
+                success: function (res) {
+                    if (res.isSuccess) {
+                        $('#modalThemLoai').modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thêm thành công!',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Thêm thất bại!',
+                            text: res.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi server',
+                        text: 'Không thể thêm loại sách.'
+                    });
+                }
+            });
+        });
+        function openModalSuaLoai(maLoai, tenLoai) {
+            $('#maLoaiSua').val(maLoai);
+            $('#tenLoaiSua').val(tenLoai);
+            $('#modalSuaLoai').modal('show');
+        }
+
+        $('#formSuaLoai').submit(function (e) {
+            e.preventDefault();
+
+            const maLoai = $('#maLoaiSua').val();
+            const tenLoai = $('#tenLoaiSua').val().trim();
+
+            if (!tenLoai) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Thiếu thông tin',
+                    text: 'Tên loại sách không được để trống.'
+                });
+                return;
+            }
+
+            $.ajax({
+                url: '/QuanLyLoai/CapNhatLoai',
+                method: 'POST',
+                data: { maLoai, tenLoai },
+                success: function (res) {
+                    if (res.isSuccess) {
+                        $('#modalSuaLoai').modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Cập nhật thành công!',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Cập nhật thất bại!',
+                            text: res.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi server',
+                        text: 'Không thể cập nhật loại sách.'
+                    });
+                }
+            });
+        });
+        function xoaLoaiSach(maLoai,tenLoai) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: `Bạn có chắc chắn muốn xóa loại sách "${ tenLoai }"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/QuanLyLoai/XoaLoaiSach',
+                        method: 'POST',
+                        data: { maLoai },
+                        success: function (res) {
+                            if (res.isSuccess) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Đã xóa thành công!',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => location.reload());
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Xóa thất bại!',
+                                    text: res.message
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi server',
+                                text: 'Không thể xóa loại sách.'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

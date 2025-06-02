@@ -1,0 +1,61 @@
+﻿@model IEnumerable<doantn.Models.DanhGia>
+
+<div class="review-section">
+    <h3 class="review-title">Đánh giá của người dùng</h3>
+    @if (Model != null && Model.Any())
+    {
+        foreach (var dg in Model)
+        {
+            string iconClass = ""; 
+            string iconColorClass = "";
+
+            switch (dg.Cap)
+            {
+                case "c2":
+                    iconClass = "fas fa-crown";
+                    iconColorClass = "text-secondary"; 
+                    break;
+                case "c3":
+                    iconClass = "fas fa-crown";
+                    iconColorClass = "text-warning"; 
+                    break;
+                case "c4":
+                    iconClass = "fas fa-wrench";
+                    iconColorClass = "text-secondary"; 
+                    break;
+            }
+
+            <div class="review-item">
+                <div class="review-header">
+                    <strong class="review-name">
+                        @dg.HoTen
+                        <i class="@iconClass @iconColorClass" style="margin-left: 5px;"></i>
+                    </strong>
+                    <div class="review-stars-inline">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= dg.SoSao)
+                            {
+                                <i class="fa fa-star filled"></i>
+                            }
+                            else
+                            {
+                                <i class="fa fa-star"></i>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="review-date">
+                    @dg.ThoiGianDanhGia.ToString("dd/MM/yyyy HH:mm")
+                </div>
+                <div class="review-content">
+                    @dg.NoiDung
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p>Chưa có đánh giá nào cho sách này.</p>
+    }
+</div>

@@ -1,0 +1,466 @@
+﻿@model doantn.ViewModel.SachChiTietViewModel
+
+@{
+    ViewData["Title"] = "docsach";
+    Layout = "~/Views/Shared/_LayoutDoc.cshtml";
+}
+
+<!-- Top bar -->
+<div class="top-bar">
+    <div class="nav-left">
+        <a href="/Sach/ChiTiet?maSach=@Model.MaSach" class="back-button">
+            <i class="fa fa-arrow-left" title="Quay lại"></i>
+        </a>
+        <i class="fa fa-bars" onclick="toggleSidebar()" title="Menu"></i>
+    </div>
+
+    <div class="nav-right">     
+        <i id="bookmarkIcon" class="fa fa-bookmark" onclick="addBookmark()" title="Đánh dấu trang"></i>
+        <i class="fa fa-cog" onclick="toggleSettingsSidebar()" title="Cài đặt"></i>
+        <i class="fa fa-book" title="Nội dung sách"></i>
+    </div>
+</div>
+
+<!-- Nội dung -->
+<div class="reader-body">
+    <div id="temp-render" style="visibility:hidden; position:absolute; top:-9999px; left:-9999px; width:48%;"></div>
+
+    <div class="book-page">
+        <div id="page-left" class="page-column">Đang tải...</div>
+        <div id="page-right" class="page-column">Đang tải...</div>
+    </div>
+</div>
+
+<!-- Thanh dưới -->
+<div class="bottom-bar">
+    <button class="nav-left" onclick="prevPage()">←</button>
+    <span class="book-title">@Model.TenSach</span>
+    <button class="nav-right" onclick="nextPage()">→</button>
+</div>
+
+<div id="settings-sidebar" class="settings-sidebar">
+    <div class="settings-header">
+        <button class="close-settings" onclick="toggleSettingsSidebar()">×</button>
+        <h3>Cài Đặt</h3>
+    </div>
+    <div class="settings-section">
+        <h4>Chế độ xem</h4>
+        <div class="view-mode-options">
+            <button class="view-mode-btn" data-mode="twopage" onclick="chuyenSangDocHaiTrang(this)">Hai trang</button>
+            <button class="view-mode-btn" data-mode="scroll" onclick="chuyenSangDocCuon(this)">Cuộn</button>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar -->
+<div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+        <div class="sidebar-header-content">
+            <img src="@Model.Anh" alt="Book Cover" class="book-cover">
+            <div class="book-info">
+                <h3 class="book-title-side">@Model.TenSach</h3>
+                <p class="book-author">Tác giả: <span>@Model.TenTacGia</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-tabs">
+        <button class="tab-button active" onclick="showTab('muc-luc')">Mục lục</button>
+        <button class="tab-button" onclick="showTab('bookmark')">Bookmark</button>
+    </div>
+
+    <div id="muc-luc" class="tab-content">
+        <ul class="chapter-list">
+        </ul>
+    </div>
+
+    <div id="bookmark" class="tab-content" style="display:none;">
+        <ul class="bookmark-list">
+        </ul>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/docsach.css" />
+}
+@section Scripts {
+    <script>
+        const chuongData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChuongNoiDung));
+        let currentPageIndex = 0;
+        let pages = []; 
+        let bookmarks = [];
+        let currentTextColor = '#000'; 
+        function formatText(text) {
+            if (!text) return "";
+
+            const paragraphs = text.split(/\n\s*\n/); 
+            return paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+        }
+
+
+        function splitContentToPages(chuong) {
+            const tempDiv = document.getElementById("temp-render");
+            tempDiv.innerHTML = "";
+
+            const words = chuong.NoiDung.split(/\s+/g);
+            let tempContent = "";
+            let chapterTitle = `<h2 class="chapter-title">${chuong.TenChuong}</h2>`;
+            let startNewChapter = true;
+
+            let i = 0;
+            const maxHeight = getMaxPageHeight();
+            const safeOverflow = 58; 
+
+            while (i < words.length) {
+                tempContent += words[i] + " ";
+                tempDiv.innerHTML = (startNewChapter ? chapterTitle : '') + `<div class="page-inner">${formatText(tempContent)}</div>`;
+
+                if (tempDiv.offsetHeight > maxHeight + safeOverflow) {
+                    const lastSpaceIndex = tempContent.trim().lastIndexOf(' ');
+                    const leftPart = tempContent.trim().substring(0, lastSpaceIndex);
+                    const rightPart = tempContent.trim().substring(lastSpaceIndex + 1);
+
+                    pages.push({
+                        tenChuong: chuong.TenChuong,
+                        noiDung: leftPart,
+                        isFirstPageOfChapter: startNewChapter
+                    });
+
+                    tempContent = rightPart + " ";
+                    startNewChapter = false;
+                }
+
+                i++;
+            }
+
+            if (tempContent.trim() !== "") {
+                pages.push({
+                    tenChuong: chuong.TenChuong,
+                    noiDung: tempContent.trim(),
+                    isFirstPageOfChapter: startNewChapter
+                });
+            }
+
+            if (pages.length % 2 !== 0) {
+                pages.push({
+                    tenChuong: '',
+                    noiDung: '',
+                    isFirstPageOfChapter: false
+                });
+            }
+
+        }
+
+        function getMaxPageHeight() {
+            const bookPage = document.querySelector('.book-page');
+            const bottomBar = document.querySelector('.bottom-bar');
+            return bookPage.offsetHeight - bottomBar.offsetHeight - 100; 
+        }
+
+        function renderPage() {
+            const pageLeft = document.getElementById("page-left");
+            const pageRight = document.getElementById("page-right");
+
+            pageLeft.innerHTML = "";
+            pageRight.innerHTML = "";
+
+            const leftPage = pages[currentPageIndex];
+            const rightPage = pages[currentPageIndex + 1];
+
+            if (!leftPage) {
+                pageLeft.innerHTML = "<i>Chưa có nội dung</i>";
+                pageRight.innerHTML = "";
+                return;
+            }
+
+            pageLeft.innerHTML = `
+                    <div class="page-inner">
+                        ${leftPage.isFirstPageOfChapter ? `<h2 class="chapter-title">${leftPage.tenChuong}</h2>` : ''}
+                        ${formatText(leftPage.noiDung)}
+                    </div>
+                `;
+
+            if (rightPage) {
+                pageRight.innerHTML = `
+                        <div class="page-inner">
+                            ${rightPage.isFirstPageOfChapter ? `<h2 class="chapter-title">${rightPage.tenChuong}</h2>` : ''}
+                            ${formatText(rightPage.noiDung)}
+                        </div>
+                    `;
+            }
+            document.querySelectorAll('.page-inner').forEach(el => {
+                el.style.color = currentTextColor;
+            });
+            updateActiveChapter();
+        }
+
+        function nextPage() {
+            if (currentPageIndex + 2 < pages.length) {
+                currentPageIndex += 2;
+                renderPage();
+                updateBookmarkIcon();
+            }
+        }
+
+        function prevPage() {
+            if (currentPageIndex - 2 >= 0) {
+                currentPageIndex -= 2;
+                renderPage();
+                updateBookmarkIcon();
+            }
+        }
+
+        
+        function prepareAllPages() {
+            for (const chuong of chuongData) {
+                splitContentToPages(chuong);
+            }
+            console.log("Tổng số trang:", pages.length);
+        }
+
+        function renderChapterList() {
+            const chapterList = document.querySelector('.chapter-list');
+
+            chuongData.forEach((chuong, index) => {
+                const li = document.createElement('li');
+                li.textContent = chuong.TenChuong;
+
+                li.setAttribute('data-index', index); 
+
+                li.onclick = () => {
+                    jumpToChapter(index);
+                };
+
+                chapterList.appendChild(li);
+            });
+        }
+
+
+        function jumpToChapter(index) {
+            let pageIndex = 0;
+            let found = false;
+
+            for (let i = 0; i < pages.length; i++) {
+                if (pages[i].tenChuong === chuongData[index].TenChuong) {
+                    pageIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found) {
+                currentPageIndex = pageIndex;
+                renderPage();
+                toggleSidebar();
+                updateBookmarkIcon();
+            }
+        }
+
+        function updateActiveChapter() {
+            const currentChapter = pages[currentPageIndex]?.tenChuong || '';
+
+            document.querySelectorAll('.chapter-list li').forEach((li, index) => {
+                const chapterName = chuongData[index]?.TenChuong || '';
+                if (chapterName === currentChapter) {
+                    li.classList.add('active-chapter');
+                } else {
+                    li.classList.remove('active-chapter');
+                }
+            });
+        }
+
+        
+
+        function loadBookmarks() {
+            fetch('/BookMark/GetBookmarks?maSach=@Model.MaSach')
+                .then(response => response.json())
+                .then(data => {
+                    bookmarks = data || [];
+                    renderBookmarkList();
+                    updateBookmarkIcon();
+                })
+                .catch(err => console.error("Lỗi load bookmark:", err));
+        }
+
+        function renderBookmarkList() {
+            const bookmarkList = document.querySelector('.bookmark-list');
+            bookmarkList.innerHTML = "";
+            const sortedBookmarks = [...bookmarks].sort((a, b) => a.soTrang - b.soTrang);
+
+            sortedBookmarks.forEach(bm => {
+                const li = document.createElement('li');
+                li.textContent = `${bm.tenChuong} - Trang ${bm.soTrang}`;
+                li.onclick = () => jumpToBookmark(bm.tenChuong, bm.soTrang);
+                bookmarkList.appendChild(li);
+            });
+        }
+
+        function jumpToBookmark(tenChuong, soTrang) {
+            const pageIndex = (soTrang - 1) * 2;
+            console.log(pageIndex);
+            if (pageIndex >= 0 && pageIndex < pages.length) {
+                currentPageIndex = pageIndex;
+                renderPage();
+                toggleSidebar();
+                updateBookmarkIcon();
+            }
+        }
+
+        function updateBookmarkIcon() {
+            const icon = document.getElementById('bookmarkIcon');
+            const current = pages[currentPageIndex];
+            if (!current) {
+                icon.style.color = '#000';
+                return;
+            }
+            const soTrangHienTai = Math.floor(currentPageIndex / 2) + 1;
+
+            const matched = bookmarks.some(bm =>
+                bm.tenChuong.trim() === current.tenChuong.trim() &&
+                bm.soTrang === soTrangHienTai
+            );
+
+            if (matched) {
+                icon.style.color = '#2ecc71'; 
+            } else {
+                icon.style.color = '#000'; 
+            }
+        }
+
+        function removeBookmark() {
+            const current = pages[currentPageIndex];
+            fetch('/BookMark/DeleteBookmark', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ MaSach: '@Model.MaSach', SoTrang: Math.floor(currentPageIndex / 2) + 1 })
+            })
+                .then(res => {
+                    if (res.ok) {
+                        return fetch('/BookMark/GetBookmarks?maSach=@Model.MaSach');
+                    } else {
+                        throw new Error("Không thể gỡ đánh dấu");
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    bookmarks = data;
+                    updateBookmarkIcon();
+                    renderBookmarkList();
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert("Có lỗi xảy ra khi gỡ đánh dấu!");
+                });
+        }
+
+
+        function saveBookmark() {
+            const current = pages[currentPageIndex];
+            fetch('/BookMark/AddBookmark', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ MaSach: '@Model.MaSach', TenChuong: current.tenChuong, SoTrang: Math.floor(currentPageIndex / 2) + 1 })
+            })
+                .then(res => {
+                    if (res.ok) {
+                        return fetch('/BookMark/GetBookmarks?maSach=@Model.MaSach');
+                    } else {
+                        throw new Error("Không thể đánh dấu");
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    bookmarks = data;
+                    updateBookmarkIcon();
+                    renderBookmarkList();
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert("Có lỗi xảy ra khi đánh dấu trang!");
+                });
+        }
+
+        function addBookmark() {
+            const maKhachHang = '@(Context.Session.GetString("MaKhachHang") ?? "")';
+            if (!maKhachHang) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Bạn chưa đăng nhập!',
+                    text: 'Vui lòng đăng nhập để đánh dấu trang.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ok',
+                    cancelButtonText: 'Hủy',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                        window.location.href = `/TaiKhoan/DangNhap?returnUrl=${returnUrl}`;
+                    }
+                });
+                return;
+            }
+            const current = pages[currentPageIndex];
+            const isMarked = bookmarks.some(bm => bm.tenChuong === current.tenChuong && bm.soTrang === Math.floor(currentPageIndex / 2) + 1);
+            if (isMarked) {
+                removeBookmark();
+            } else {
+                saveBookmark();
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabName).style.display = 'block';
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+        }
+        function toggleNightMode() {
+            document.body.classList.toggle('night-mode');
+        }
+
+        function toggleSettingsSidebar() {
+            document.getElementById('settings-sidebar').classList.toggle('open');
+        }
+
+        prepareAllPages();
+        renderPage();
+        renderChapterList();
+        updateActiveChapter();
+        loadBookmarks();
+
+        function chuyenSangDocHaiTrang(btn) {
+            const maSach = '@Model.MaSach';
+            if (btn) {
+                document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+            window.location.href = `/Sach/DocSachCuon?maSach=${maSach}`;
+        }
+
+        function chuyenSangDocCuon(btn) {
+            const maSach = '@Model.MaSach';
+            if (btn) {
+                document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+            window.location.href = `/Sach/DocSach?maSach=${maSach}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const path = window.location.pathname.toLowerCase();
+            const mode = path.includes('cuon') ? 'twopage' : 'scroll';
+            document.querySelectorAll('.view-mode-btn').forEach(btn => {
+                if (btn.dataset.mode === mode) {
+                    btn.classList.add('active');
+                }
+            });
+        });
+
+    </script>
+}

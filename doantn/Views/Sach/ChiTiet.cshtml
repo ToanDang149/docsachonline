@@ -1,0 +1,456 @@
+﻿@model Sach
+@{
+    ViewData["Title"] = Model.TenSach;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.SachKhongNoiDung = new List<string>
+    { "s2", "s3", "s4", "s5","s6","s7","s8","s9","s2" };
+    var danhSachFile = ViewBag.DanhSachFile as List<doantn.Models.FileSach>;
+    var filesDict = danhSachFile
+    .Where(f => !string.IsNullOrWhiteSpace(f.LoaiFile))
+    .GroupBy(f => f.LoaiFile.Trim().ToLower())
+    .ToDictionary(g => g.Key, g => g.First());
+}
+
+
+<div class="book-detail-container">
+    <div class="book-left">
+        <img src="@Model.Anh" alt="@Model.TenSach" />
+        <div class="shelf-actions">
+            <a id="btnLuuTuSach" class="btn-shelf save @(ViewBag.DaLuu == true ? "saved" : "")">
+                <i class="fa fa-heart"></i> @(ViewBag.DaLuu == true ? "Đã lưu sách" : "Lưu vào Tủ sách")
+            </a>
+            <a href="/TuSach" id="btnGoTuSach" class="btn-shelf go">
+                <i class="fa fa-user"></i> Đến Tủ sách
+            </a>
+        </div>
+    </div>
+
+    <div class="book-right">
+        <p class="breadcrumb">Trang chủ / @Model.TenLoai</p>
+
+        <h2 class="book-title">@Model.TenSach</h2>
+
+        <div class="book-stats">
+            <span class="view-box">
+                <i class="fa fa-eye"></i> @Model.LuotXem xem
+            </span>
+            <span class="download-box">
+                <i class="fa fa-download"></i> @Model.LuotTai
+            </span>
+            <span class="rating-box">
+                @if (ViewBag.TrungBinhSao > 0)
+                {
+                    <span class="rating-value">@ViewBag.TrungBinhSao / 5</span>
+                    <i class="fa fa-star filled"></i>
+                    <span class="rating-count">( @ViewBag.SoLuongDanhGia đánh giá )</span>
+                }
+                else
+                {
+                    <span class="rating-count"><em>Chưa có đánh giá</em></span>
+                }
+            </span>
+
+        </div>
+
+        <p class="book-description">Sách @Model.TenSach của tác giả @Model.TenTacGia đã có ebook bản đẹp. Mời các bạn đọc @Model.TenSach miễn phí thông qua liên kết bên dưới.</p>
+
+        <div class="book-meta">
+            <p><strong>Thể loại:</strong> @Model.TenLoai</p>
+            <p><strong>Định dạng:</strong> Pdf</p>
+            <p><strong>Tác giả:</strong> @Model.TenTacGia</p>
+            <p><strong>Nguồn:</strong> @(Model.Nguon ?? "Đang cập nhật...")</p>
+        </div>
+
+        <div class="book-actions">
+            <a asp-controller="Sach" asp-action="DocSach" asp-route-maSach="@Model.MaSach" class="btn btn-purple" onclick="return checkNoiDung('@Model.MaSach')"><i class="fa fa-book-open"></i> ĐỌC SÁCH ONLINE</a>
+            <a href="#taixuong" class="btn btn-pink"><i class="fa fa-download"></i> TẢI XUỐNG NGAY</a>
+        </div>
+    </div>
+
+</div>
+<div class="book-description-section">
+    <div class="tab-title">Mô tả</div>
+    <p class="summary-title"><strong>Tóm tắt "@Model.TenSach" - @Model.TenTacGia</strong></p>
+    <div class="description-box">
+        @Html.Raw(Model.GioiThieu ?? "<em>Chưa có mô tả nội dung.</em>")
+    </div>
+</div>
+<div class="book-download-section" id="taixuong">
+    <h4 class="download-title">Tải eBook @Model.TenSach:</h4>
+    @foreach (var format in new[] { "pdf", "epub", "azw3", "mobi" })
+    {
+        var lowerFormat = format.ToLower();
+        var file = filesDict?.ContainsKey(lowerFormat) == true ? filesDict[lowerFormat] : null;
+
+        <div class="download-row">
+            <span class="file-name">@Model.TenSach @format.ToUpper()</span>
+            @if (file != null)
+            {
+                <button type="button" onclick="xuLyTaiFile('@Model.MaSach', '@format')" class="btn-download-format">
+                    <i class="fa fa-download"></i> Tải File @format.ToUpper()
+                </button>
+            }
+            else
+            {
+                <span class="updating-text"><em>Đang cập nhật...</em></span>
+            }
+        </div>
+    }
+</div>
+<div class="review-section">
+    <h3 class="review-title">Đánh giá của người dùng</h3>
+
+    @if (ViewBag.DanhGias != null && ((IEnumerable<doantn.Models.DanhGia>)ViewBag.DanhGias).Any())
+    {
+        foreach (var dg in (IEnumerable<doantn.Models.DanhGia>)ViewBag.DanhGias)
+        {
+            string iconClass = "";
+            string iconColorClass = "";
+
+            switch (dg.Cap)
+            {
+                case "c2":
+                    iconClass = "fas fa-crown";
+                    iconColorClass = "text-secondary"; 
+                    break;
+                case "c3":
+                    iconClass = "fas fa-crown";
+                    iconColorClass = "text-warning"; 
+                    break;
+                case "c4":
+                    iconClass = "fas fa-wrench";
+                    iconColorClass = "text-secondary"; 
+                    break;
+            }
+
+            <div class="review-item">
+                <div class="review-header">
+                    <strong class="review-name">
+                        @dg.HoTen
+                        <i class="@iconClass @iconColorClass" style="margin-left: 6px;"></i>
+                    </strong>
+                    <div class="review-stars-inline">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= dg.SoSao)
+                            {
+                                <i class="fa fa-star filled"></i>
+                            }
+                            else
+                            {
+                                <i class="fa fa-star"></i>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="review-date">
+                    @dg.ThoiGianDanhGia.ToString("dd/MM/yyyy HH:mm")
+                </div>
+                <div class="review-content">
+                    @dg.NoiDung
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p>Chưa có đánh giá nào cho sách này.</p>
+    }
+</div>
+@if (Context.Session.GetString("MaKhachHang") != null)
+{
+    <div class="review-form">
+        <h3 class="review-title">Đánh giá sách</h3>
+
+        <form asp-controller="DanhGia" asp-action="LuuDanhGia" method="post">
+            <input type="hidden" name="maSach" value="@Model.MaSach" />
+
+            <div class="form-group rating">
+                <div id="rating-stars">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="fa fa-star" data-value="@i"></i>
+                    }
+                </div>
+                <input type="hidden" id="soSao" name="soSao" required />
+            </div>
+
+            <div class="form-group">
+                <label for="noiDung">Nhận xét:</label>
+                <textarea name="noiDung" id="noiDung" rows="4" class="form-control" placeholder="Viết nhận xét của bạn..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Gửi đánh giá</button>
+        </form>
+    </div>
+}
+else
+{
+    var currentUrl = Context.Request.Path + Context.Request.QueryString;
+    <p class="chuadn">Vui lòng <a href="/TaiKhoan/DangNhap?returnUrl=@Uri.EscapeDataString(currentUrl)">đăng nhập</a> để đánh giá sách này.</p>
+}
+
+@if (ViewBag.SachCungChuDe != null && ViewBag.SachCungChuDe.Count > 0)
+{
+    <div class="related-books-section">
+        <h4 class="related-title">Sách eBook cùng chủ đề</h4>
+        <div class="book-grid">
+            @foreach (var item in ViewBag.SachCungChuDe as List<Sach>)
+            {
+                <a asp-controller="Sach" asp-action="ChiTiet" asp-route-maSach="@item.MaSach" class="book-card">
+                    <img src="@item.Anh" alt="@item.TenSach" />
+                    <div class="book-label1">@item.TenLoai</div>
+                    <div class="book-stats1">
+                        <span class="views1"><i class="fa fa-eye"></i> @item.LuotXem?.ToString("N0") lượt xem</span>
+                        <span class="downloads1"><i class="fa fa-download"></i> @item.LuotTai?.ToString("N0")</span>
+                    </div>
+                    <h5 class="book-title1">@item.TenSach</h5>
+                </a>
+            }
+        </div>
+    </div>
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/sachchitiet.css" />
+    <link rel="stylesheet" href="~/css/danhgia.css" />
+}
+@section Scripts {
+    <script>
+        const stars = document.querySelectorAll('#rating-stars i');
+        const soSaoInput = document.getElementById('soSao');
+
+        stars.forEach((star, index) => {
+            star.addEventListener('click', () => {
+                soSaoInput.value = star.getAttribute('data-value');
+
+                stars.forEach(s => s.classList.remove('selected'));
+                for (let i = 0; i <= index; i++) {
+                    stars[i].classList.add('selected');
+                }
+            });
+
+            star.addEventListener('mouseover', () => {
+                stars.forEach(s => s.classList.remove('hover'));
+                for (let i = 0; i <= index; i++) {
+                    stars[i].classList.add('hover');
+                }
+            });
+
+            star.addEventListener('mouseout', () => {
+                stars.forEach(s => s.classList.remove('hover'));
+            });
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector('.review-form form');
+
+            if (form) {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const maSach = document.querySelector('input[name="maSach"]').value;
+                    const soSao = document.querySelector('input[name="soSao"]').value;
+                    const noiDung = document.querySelector('textarea[name="noiDung"]').value;
+
+                    if (!soSao || !noiDung.trim()) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Thiếu thông tin',
+                            text: 'Vui lòng chọn số sao và ghi đánh giá.'
+                        });
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/DanhGia/Luu', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json'
+                            },
+                            body: new FormData(this)
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            await reloadDanhGia(maSach);
+                            updateTrungBinhSao(result.trungBinhSao, result.soLuongDanhGia);
+                            this.reset();
+                            document.querySelectorAll('#rating-stars i').forEach(s => s.classList.remove('selected'));
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Không thể gửi đánh giá',
+                            text: 'Vui lòng thử lại sau.'
+                        });
+                    }
+                });
+            }
+        });
+
+        function updateTrungBinhSao(trungBinh, soLuong) {
+            const ratingBox = document.querySelector('.rating-box');
+
+            if (ratingBox) {
+                ratingBox.innerHTML = `
+                    <span class="rating-value">${trungBinh} / 5</span>
+                    <i class="fa fa-star filled"></i>
+                    <span class="rating-count">(${soLuong} đánh giá)</span>
+                `;
+            }
+        }
+
+        async function reloadDanhGia(maSach) {
+            try {
+                const response = await fetch(`/DanhGia/DanhSachDanhGia?maSach=${maSach}`);
+                const html = await response.text();
+
+                const oldSection = document.querySelector('.review-section');
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = html.trim();
+                const newSection = wrapper.querySelector('.review-section');
+
+                if (oldSection && newSection) {
+                    oldSection.replaceWith(newSection); 
+                }
+            } catch (error) {
+                console.error('Error reload review:', error);
+            }
+        }
+
+        var userIsLoggedIn = @(Context.Session.GetString("MaKhachHang") != null ? "true" : "false");
+
+        document.getElementById("btnGoTuSach").addEventListener("click", async function (e) {
+            const userIsLoggedIn = @(Context.Session.GetString("MaKhachHang") != null ? "true" : "false") === "true";
+
+            if (!userIsLoggedIn) {
+                e.preventDefault();
+                const returnUrl = encodeURIComponent('/TuSach');
+
+                const result = await Swal.fire({
+                    icon: 'warning',
+                    title: 'Bạn chưa đăng nhập!',
+                    text: 'Vui lòng đăng nhập để tiếp tục.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ok',
+                    cancelButtonText: 'Hủy'
+                });
+
+                if (result.isConfirmed) {
+                    window.location.href = '/TaiKhoan/DangNhap?returnUrl=' + returnUrl;
+                }
+            }
+        });
+
+        var sachKhongNoiDung = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.SachKhongNoiDung ?? new List<string>()));
+
+        function checkNoiDung(maSach) {
+            if (sachKhongNoiDung.includes(maSach)) {
+                alert("Sách này chưa có nội dung!");
+                return false; 
+            }
+            return true; 
+        }
+
+        document.getElementById("btnLuuTuSach").addEventListener("click", function (e) {
+            e.preventDefault();
+            
+            var button = this;
+            var maSach = "@Model.MaSach";
+
+            fetch('/TuSach/Luu', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ maSach: maSach })
+            })
+                .then(async response => {
+                    if (response.status === 401) {
+                        const currentPath = window.location.pathname + window.location.search;
+                        const returnUrl = encodeURIComponent(currentPath);
+                        const result = await Swal.fire({
+                            icon: 'warning',
+                            title: 'Bạn chưa đăng nhập!',
+                            text: 'Vui lòng đăng nhập để tiếp tục.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Ok',
+                            cancelButtonText: 'Hủy'
+                        });
+
+                        if (result.isConfirmed) {
+                            window.location.href = '/TaiKhoan/DangNhap?returnUrl=' + returnUrl;
+                        }
+                        return; 
+                    } else if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Có lỗi xảy ra');
+                    }
+                })
+                .then(data => {
+                    if (data.daLuu) {
+                        button.classList.add('saved');
+                        button.innerHTML = '<i class="fa fa-heart"></i> Đã lưu sách';
+                    } else {
+                        button.classList.remove('saved');
+                        button.innerHTML = '<i class="fa fa-heart"></i> Lưu vào Tủ sách';
+                    }
+                })
+                .catch(error => {
+                });
+        });
+        async function xuLyTaiFile(maSach, dinhDang) {
+            const res = await fetch(`/Sach/TaiFile?maSach=${maSach}&dinhDang=${dinhDang}`);
+            const data = await res.json();
+
+            switch (data.status) {
+                case "not_logged_in":
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Bạn chưa đăng nhập!',
+                        text: 'Vui lòng đăng nhập để tiếp tục.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ok',
+                        cancelButtonText: 'Hủy',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const returnUrl = encodeURIComponent(location.pathname + location.search);
+                            window.location.href = `/TaiKhoan/DangNhap?returnUrl=${returnUrl}`;
+                        }
+                    });
+                    break;
+
+                case "unauthorized":
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Bạn chưa có quyền tải!',
+                        text: 'Vui lòng nâng cấp tài khoản để tiếp tục.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ok',
+                        cancelButtonText: 'Hủy',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const returnUrl = encodeURIComponent(location.pathname + location.search);
+                            window.location.href = `/TaiKhoan/DangNhap?returnUrl=${returnUrl}`;
+                        }
+                    });
+                    break;
+                    break;
+
+                case "success":
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tải thành công!',
+                        text: 'Đang bắt đầu tải file...'
+                    }).then(() => {
+                        window.location.href = data.downloadUrl;
+                    });
+                    break;
+
+                default:
+                    Swal.fire("Lỗi không xác định.");
+            }
+        }
+    </script>
+}

@@ -1,0 +1,389 @@
+﻿@model doantn.ViewModel.SachChiTietViewModel
+
+@{
+    ViewData["Title"] = "docsach";
+    Layout = "~/Views/Shared/_LayoutDocCuon.cshtml";
+    int lineNumber = 1;
+    int chuongIndex = 1;
+    var danhSachDong = new List<(int Line, string Html, string? Chuong)>();
+    var chuongList = new List<(int Id, string Ten)>();
+
+    foreach (var chuong in Model.ChuongNoiDung)
+    {
+        chuongList.Add((chuongIndex, chuong.TenChuong));
+        var tieuDeChuong = $"<h3 class='chapter-title' id='chuong-{chuongIndex}'>{chuong.TenChuong}</h3>";
+        danhSachDong.Add((lineNumber++, tieuDeChuong, chuong.TenChuong));
+        chuongIndex++;
+
+        var matches = System.Text.RegularExpressions.Regex.Matches(
+            chuong.NoiDung ?? string.Empty,
+            "<p.*?>.*?</p>",
+            System.Text.RegularExpressions.RegexOptions.Singleline | System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+
+        foreach (System.Text.RegularExpressions.Match match in matches)
+        {
+            danhSachDong.Add((lineNumber++, match.Value, chuong.TenChuong));
+        }
+    }
+}
+
+<!-- Top bar -->
+<div class="top-bar">
+    <div class="nav-left">
+        <a href="/Sach/ChiTiet?maSach=@Model.MaSach" class="back-button">
+            <i class="fa fa-arrow-left" title="Quay lại"></i>
+        </a>
+        <i class="fa fa-bars" onclick="toggleSidebar()" title="Menu"></i>
+    </div>
+    <div class="nav-right">
+        <i class="fa fa-cog" onclick="toggleSettingsSidebar()" title="Cài đặt"></i>
+        <i class="fa fa-book" title="Nội dung sách"></i>
+    </div>
+</div>
+
+<!-- Nội dung -->
+<div class="scroll-reader-wrapper">
+    <div class="scroll-reader-content">
+        <h2 class="book-title">@Model.TenSach</h2>
+        <p class="book-author">Tác giả: <strong>@Model.TenTacGia</strong></p>
+
+        @foreach (var dong in danhSachDong)
+        {
+            <div id="line-@dong.Line" class="book-line">
+                <div class="line-content">
+                    @Html.Raw(dong.Html)
+                    <button class="bookmark-btn" data-line="@dong.Line" onclick="handleBookmarkClick(this)">
+                        <i class="fa fa-bookmark"></i>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Thanh dưới -->
+<div class="bottom-bar">
+    <span class="book-title">@Model.TenSach</span>
+</div>
+
+<!-- Sidebar -->
+<div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+        <div class="sidebar-header-content">
+            <img src="@Model.Anh" alt="Book Cover" class="book-cover">
+            <div class="book-info">
+                <h3 class="book-title-side">@Model.TenSach</h3>
+                <p class="book-author1">Tác giả: <span>@Model.TenTacGia</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-tabs">
+        <button class="tab-button active" onclick="showTab('muc-luc')">Mục lục</button>
+        <button class="tab-button" onclick="showTab('bookmark')">Bookmark</button>
+    </div>
+
+    <div id="muc-luc" class="tab-content">
+        <ul class="chapter-list">
+            @foreach (var chuong in chuongList)
+            {
+                <li class="chapter-link" onclick="scrollToChuong('chuong-@chuong.Id')">@chuong.Ten</li>
+            }
+        </ul>
+    </div>
+
+    <div id="bookmark" class="tab-content" style="display:none;">
+        <ul class="bookmark-list"></ul>
+    </div>
+</div>
+
+<!-- Cài đặt -->
+<div id="settings-sidebar" class="settings-sidebar">
+    <div class="settings-header">
+        <button class="close-settings" onclick="toggleSettingsSidebar()">×</button>
+        <h3>Cài Đặt</h3>
+    </div>
+    <div class="settings-section">
+        <h4>Chế độ xem</h4>
+        <div class="view-mode-options">
+            <button class="view-mode-btn" data-mode="twopage" onclick="changeViewMode(this)">Hai trang</button>
+            <button class="view-mode-btn" data-mode="scroll" onclick="changeViewMode(this)">Cuộn</button>
+        </div>
+    </div>
+    <div class="settings-section">
+        <h4>Kích thước chữ</h4>
+        <div class="font-size-control">
+            <button onclick="decreaseFontSize()">−</button>
+            <span id="font-size-display">17</span>
+            <button onclick="increaseFontSize()">+</button>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h4>Màu nền</h4>
+        <div class="background-colors">
+            <div class="color-option" style="background:#fff;" onclick="setBackgroundColor('#fff')"></div>
+            <div class="color-option" style="background:#222;" onclick="setBackgroundColor('#222')"></div>
+            <div class="color-option" style="background:#edd9b5;" onclick="setBackgroundColor('#edd9b5')"></div>
+            <div class="color-option" style="background:#c8ead3;" onclick="setBackgroundColor('#c8ead3')"></div>
+        </div>
+    </div>
+    <div class="settings-section">
+        <h4>Màu chữ</h4>
+        <div class="text-colors">
+            <div class="color-option" style="background:#fff;" onclick="setTextColor('#fff')"></div>
+            <div class="color-option" style="background:#000;" onclick="setTextColor('#000')"></div>
+            <div class="color-option" style="background:#795548;" onclick="setTextColor('#795548')"></div>
+            <div class="color-option" style="background:#2e7d32;" onclick="setTextColor('#2e7d32')"></div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/docuon.css" />
+}
+
+@section Scripts {
+    <script>
+        const bookmarks = [];
+        function handleBookmarkClick(btn) {
+            const line = parseInt(btn.dataset.line);
+            const maSach = '@Model.MaSach';
+            const tenChuong = getChuongTuDong(line);
+            const maKhachHang = '@Context.Session.GetString("MaKhachHang")';
+
+            if (!maKhachHang) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Bạn chưa đăng nhập!',
+                    text: 'Vui lòng đăng nhập để đánh dấu trang.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ok',
+                    cancelButtonText: 'Hủy',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const currentUrl = encodeURIComponent(window.location.href);
+                        window.location.href = `/TaiKhoan/DangNhap?returnUrl=${currentUrl}`;
+                    }
+                });
+                return;
+            }
+            if (btn.classList.contains("marked")) {
+                fetch(`/BookMarkCuon/Delete?maKhachHang=${maKhachHang}&maSach=${maSach}&soDong=${line}`, {
+                    method: 'DELETE'
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            btn.classList.remove("marked"); 
+                            const items = document.querySelectorAll('.bookmark-list .bookmark-item');
+                            items.forEach(item => {
+                                if (item.textContent.includes(`dòng ${line}`)) {
+                                    item.remove();
+                                }
+                            });
+                        }
+                    });
+                return;
+            }
+            fetch('/BookMarkCuon/Add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    MaKhachHang: maKhachHang,
+                    MaSach: maSach,
+                    TenChuong: tenChuong,
+                    SoDong: line
+                })
+            })
+                .then(async res => {
+                    if (!res.ok) {
+                        const errorText = await res.text();
+                        console.error("Lỗi server:", errorText);
+                        alert("Có lỗi xảy ra khi lưu bookmark!");
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data?.success) {
+                        btn.classList.add("marked");
+
+                        const li = document.createElement('li');
+                        li.className = 'bookmark-item';
+                        li.innerHTML = `<strong>${tenChuong}</strong> - dòng ${line}`;
+                        li.onclick = () => {
+                            const el = document.getElementById(`line-${line}`);
+                            if (el) {
+                                const y = el.getBoundingClientRect().top + window.pageYOffset - 60;
+                                window.scrollTo({ top: y, behavior: 'smooth' });
+
+                                el.classList.add('highlighted');
+                                setTimeout(() => {
+                                    el.classList.remove('highlighted');
+                                }, 3000);
+                            }
+                        };  
+                        document.querySelector('.bookmark-list').appendChild(li);
+                    }
+                });
+        }
+        function getChuongTuDong(line) {
+            let chuong = "";
+            for (const div of document.querySelectorAll('.chapter-title')) {
+                const id = div.id?.replace('chuong-', '');
+                const pos = div.closest('.book-line')?.id?.replace('line-', '');
+                if (pos && parseInt(pos) <= line) chuong = div.innerText;
+            }
+            return chuong;
+        }
+        function loadBookmarks() {
+            const maSach = '@Model.MaSach';
+            const maKhachHang = '@Context.Session.GetString("MaKhachHang")';
+            if (!maKhachHang) return;
+            fetch(`/BookMarkCuon/Get?maKhachHang=${maKhachHang}&maSach=${maSach}`)
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.querySelector('.bookmark-list');
+                    container.innerHTML = '';
+
+                    data.forEach(bm => {
+                        const li = document.createElement('li');
+                        li.className = 'bookmark-item'; 
+                        li.innerHTML = `<strong>${bm.tenChuong}</strong> - dòng ${bm.soDong}`;
+                        li.onclick = () => {
+                            const el = document.getElementById(`line-${bm.soDong}`);
+                            if (el) {
+                                const y = el.getBoundingClientRect().top + window.pageYOffset - 60;
+                                window.scrollTo({ top: y, behavior: 'smooth' });
+
+                                el.classList.add('highlighted');
+                                setTimeout(() => {
+                                    el.classList.remove('highlighted');
+                                }, 3000);
+                            }
+                        };
+                        container.appendChild(li);
+                        const btn = document.querySelector(`.bookmark-btn[data-line="${bm.soDong}"]`);
+                        if (btn) {
+                            btn.classList.add("marked");
+                        }
+                    });
+                });
+        }
+        function addBookmark(line, content) {
+            if (bookmarks.some(b => b.line === line)) return;
+
+            bookmarks.push({ line, content });
+            renderBookmarks();
+        }
+        function renderBookmarks() {
+            const container = document.querySelector('.bookmark-list');
+            container.innerHTML = '';
+
+            bookmarks.sort((a, b) => a.soDong - b.soDong).forEach(bm => {
+                const li = document.createElement('li');
+                li.className = 'bookmark-item';
+                li.innerHTML = `<strong>${bm.tenChuong}</strong> - dòng ${bm.soDong}`;
+                li.onclick = () => {
+                    const el = document.getElementById(`line-${bm.soDong}`);
+                    if (el) {
+                        const y = el.getBoundingClientRect().top + window.pageYOffset - 60;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                };
+                container.appendChild(li);
+            });
+        }
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabName).style.display = 'block';
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function toggleSettingsSidebar() {
+            document.getElementById('settings-sidebar').classList.toggle('open');
+        }
+
+        function setBackgroundColor(color) {
+            document.body.style.setProperty('background-color', color, 'important');
+        }
+
+
+        let currentTextColor = '#000';
+        function setTextColor(color) {
+            // Toàn bộ dòng nội dung
+            document.querySelectorAll('.book-line').forEach(el => {
+                el.style.setProperty('color', color, 'important');
+            });
+            document.querySelector('.book-title')?.style.setProperty('color', color, 'important');
+            document.querySelector('.book-author')?.style.setProperty('color', color, 'important');
+            document.querySelector('.book-author1 span')?.style.setProperty('color', color, 'important');
+        }
+
+        function scrollToChuong(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const yOffset = -60; 
+            const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+        function changeViewMode(button) {
+            document.querySelectorAll('.view-mode-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            const mode = button.dataset.mode;
+
+            if (mode === 'scroll') {
+                window.location.href = `/Sach/DocSach?maSach=@Model.MaSach`;
+            } else if (mode === 'twopage') {
+                window.location.href = `/Sach/DocSachCuon?maSach=@Model.MaSach`;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const isCuon = window.location.pathname.includes('/Sach/DocSach');
+            const mode = isCuon ? 'scroll' : 'twopage';
+
+            document.querySelectorAll('.view-mode-btn').forEach(btn => {
+                if (btn.dataset.mode === mode) btn.classList.add('active');
+            });
+        });
+        let currentFontSize = 17;
+        function updateFontSize(size) {
+            currentFontSize = size;
+            document.getElementById('font-size-display').innerText = size;
+            document.querySelectorAll('.scroll-reader-content, .book-line').forEach(el => {
+                el.style.setProperty('font-size', `${size}px`, 'important');
+            });
+
+            localStorage.setItem('fontSize', size);
+        }
+        function increaseFontSize() {
+            if (currentFontSize < 30) {
+                updateFontSize(currentFontSize + 1);
+            }
+        }
+        function decreaseFontSize() {
+            if (currentFontSize > 10) {
+                updateFontSize(currentFontSize - 1);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedSize = parseInt(localStorage.getItem('fontSize'));
+            if (savedSize && savedSize >= 10 && savedSize <= 30) {
+                updateFontSize(savedSize);
+            }
+        });
+        window.onload = function () {
+            loadBookmarks();
+        };
+    </script>
+}

@@ -1,0 +1,237 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - doantn</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/doantn.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    @RenderSection("Styles", required: false)
+</head>
+@{
+    var hoTen = Context.Session.GetString("HoTen");
+    var cap = Context.Session.GetString("Cap");
+    string iconClass = "fa fa-user"; 
+
+    switch (cap)
+    {
+        case "c2":
+            iconClass = "fas fa-crown text-secondary"; 
+            break;
+        case "c3":
+            iconClass = "fas fa-crown text-warning"; 
+            break;
+        case "c4":
+            iconClass = "fas fa-wrench text-secondary";
+            break;
+    }
+}
+<body class="layout-grid">
+    <nav class="navbar">
+        <div class="navbar-top">
+            <div class="navbar-inner">
+                <div class="logo">
+                    <a href="/Home">
+                        <img src="/images/logo.png" alt="EbookVie Logo" />
+                    </a>
+                </div>              
+                <div class="search-wrapper">
+                    <form asp-controller="TimKiem" asp-action="Index" method="get" class="search-form">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm tên sách hoặc tác giả..." />
+                        <button type="submit"><i class="fa fa-search"></i></button>
+                    </form>
+                </div>
+                <div class="user-actions">
+                    @if (Context.Session.GetString("HoTen") != null)
+                    {
+                       <ul>
+                            <li class="tai-khoan2">
+                                <a class="btn-user">
+                                    <i class="@iconClass"></i> @hoTen
+                                </a>
+                                <ul class="dropdown-menu2" id="dropdownEbookHot2">
+                                    <li><a href="/SachDaDoc">Sách đã đọc</a></li>
+                                    <li><a href="/TuSach">Tủ sách</a></li>
+                                </ul>
+                            </li>
+                       </ul>                       
+                        <a href="/TaiKhoan/DangXuat"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+                    }
+                    else
+                    {
+                        <a href="/TaiKhoan/DangNhap"><i class="fa fa-user"></i> Đăng nhập</a>
+                        <a href="/TaiKhoan/DangKy"><i class="fa fa-user"></i> Đăng ký</a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="navbar-bottom">
+            <ul>
+                <li class="@(IsActiveTrangChu() ? "active" : "")">
+                    <a href="/Home">Trang chủ</a>
+                </li>
+                <li class="menu-library @(IsActiveThuvien() ? "active" : "")">
+                    <a href="#">Thư viện<i class="fa fa-chevron-down"></i></a>
+                    <ul class="dropdown-menu" id="dropdownLibrary">
+                    </ul>
+                </li>
+                <li class="menu-ebook-hot @(IsActiveHot() ? "active" : "")">
+                    <a href="#">Ebook Hot<i class="fa fa-chevron-down"></i></a>
+                    <ul class="dropdown-menu" id="dropdownEbookHot">
+                        <li><a href="/Ebook/Hot">Ebook Hot</a></li>
+                        <li><a href="/Ebook/Moi">Ebook Mới</a></li>
+                        <li><a href="/Ebook/TaiNhieu">Ebook Tải nhiều</a></li>
+                    </ul>
+                </li>
+                <li class="@(IsActiveDichVu() ? "active" : "")">
+                    <a href="/Mua/DichVu">Dịch vụ</a>
+                </li>
+                <li class="@(IsActiveLienHe() ? "active" : "")">
+                    <a href="/LienHe/Index">Liên hệ</a>
+                </li>
+                @if (Context.Session.GetString("HoTen") != null)
+                {
+                    <li class="tai-khoan @(IsActiveTaiKhoan() ? "active" : "")">
+                        <a href="#">Tài khoản<i class="fa fa-chevron-down"></i></a>
+                        <ul class="dropdown-menu1" id="dropdownEbookHot1">
+                            <li><a href="/SachDaDoc">Sách đã đọc</a></li>
+                            <li><a href="/TuSach">Tủ sách</a></li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+
+                }               
+                @if (Context.Session.GetString("Cap") != null && Context.Session.GetString("Cap") == "c4")
+                {
+                    <li class="quan-ly @(IsActiveQuanLy() ? "active" : "")">
+                        <a href="#">Quản lý<i class="fa fa-chevron-down"></i></a>
+                        <ul class="dropdown-menu1" id="dropdownEbookHot1">
+                            <li><a href="/QuanLy/Sach">Sách</a></li>
+                            <li><a href="/QuanLyLoai/LoaiSach">Loại sách</a></li>
+                            <li><a href="/QuanLyKhachHang/KhachHang">Người dùng</a></li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+
+                }
+            </ul>
+        </div>
+    </nav>
+    @functions {
+        public bool IsActiveThuvien()
+        {
+            var path = Context.Request.Path.ToString().ToLower();
+            return path.Contains("/sach/danhsach");
+        }
+        public bool IsActiveDichVu()
+        {
+            var path = Context.Request.Path.ToString().ToLower();
+            return path.Contains("/mua/dichvu");
+        }
+        public bool IsActiveLienHe()
+        {
+            var path = Context.Request.Path.ToString().ToLower();
+            return path.Contains("/lienhe/index");
+        }
+        public bool IsActiveHot()
+        {
+            var path = Context.Request.Path.ToString().ToLower();
+            return path.StartsWith("/ebook/hot") || path.StartsWith("/ebook/moi") || path.StartsWith("/ebook/tainhieu");
+        }
+        public bool IsActiveTrangChu()
+        {
+            var path = Context.Request.Path.ToString().ToLower();
+            return path == "/" || path.StartsWith("/home");
+        }
+        public bool IsActiveTaiKhoan()
+        {
+            var path = Context.Request.Path.ToString().ToLower();
+            return path.StartsWith("/sachdadoc") || path.StartsWith("/tusach");
+        }
+        public bool IsActiveQuanLy()
+        {
+            var path = Context.Request.Path.ToString().ToLower();
+            return path.StartsWith("/quanly/sach") || path.StartsWith("/quanlyloai/loaisach") || path.StartsWith("/quanlykhachhang/khachhang") || path.StartsWith("/thongke/sach");
+        }
+    }
+    <main>
+        <div class="container pb-3">
+            @RenderBody()
+        </div>
+    </main>
+    <footer class="site-footer">
+        <div class="footer-content container">
+            <div class="footer-left">
+                <h4>Giới thiệu</h4>
+                <p>Ebook - Đọc sách ebook miễn phí thông qua web và cung cấp tải sách với định dạng Epub,Azw3,Pdf,Mobi,... phù hợp cho máy đọc sách Kindle, Kobo, Boox, Bibox, Meebook, Pockerbook....</p>
+                <p>
+                    Người chịu trách nhiệm nội dung: <strong>Đặng Ngọc Toàn</strong><br>
+                </p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-pinterest"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                    <a href="#"><i class="fab fa-flickr"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-right">
+                <h4>Thông tin</h4>
+                <ul>
+                    <li><a href="#">Chính sách bảo mật</a></li>
+                    <li><a href="#">Quy chế hoạt động</a></li>
+                    <li><a href="#">Giới thiệu</a></li>
+                    <li><a href="#">Liên hệ</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.querySelector("form").addEventListener("submit", function (e) {
+            var input = document.querySelector("input[name='search']").value.trim();
+            if (!input) {
+                e.preventDefault();
+            }
+        });
+        const navbar = document.querySelector('.navbar-bottom');
+        const navbarOffsetTop = navbar.offsetTop;
+
+        window.addEventListener('scroll', function () {
+            if (window.scrollY >= navbarOffsetTop + navbar.offsetHeight) {
+                navbar.classList.add('sticky-show');
+            } else {
+                navbar.classList.remove('sticky-show');
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/Loai/GetLoai')
+                .then(response => response.json())
+                .then(data => {
+                    const dropdown = document.getElementById('dropdownLibrary');
+                    dropdown.innerHTML = '';
+                    data.forEach(loai => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<a href="/Sach/DanhSach?maLoai=${loai.maLoai}">${loai.tenLoai}</a>`;
+                        dropdown.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Lỗi lấy mã loại:', error));
+        });        
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

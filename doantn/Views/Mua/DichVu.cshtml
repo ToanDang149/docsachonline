@@ -1,0 +1,151 @@
+﻿@{
+    ViewData["Title"] = "Chọn gói dịch vụ";
+    var isLoggedIn = Context.Session.GetString("MaKhachHang") != null;
+    var currentCap = Context.Session.GetString("Cap") ?? "c1";
+    var disableBasic = isLoggedIn && (currentCap == "c1" || currentCap == "c2" || currentCap == "c3");
+    var disableVip = isLoggedIn && (currentCap == "c2" || currentCap == "c3");
+    var disablePremium = isLoggedIn && currentCap == "c3";
+}
+
+<h2 class="text-center mb-5">Các gói dịch vụ</h2>
+
+<div class="goi-container">
+    <!-- CƠ BẢN -->
+    <div class="goi-box @(disableBasic ? "disabled-card" : "")">
+        <div class="goi-content">
+            <div class="goi-label goi-macdinh">Mặc định</div>
+            <h3>Cơ bản</h3>
+            <p class="thanh-vien-text">Trở thành thành viên ngay</p>
+            <hr class="goi-divider" />
+
+            <ul class="goi-quyen">
+                <li><i class="fa fa-check"></i>Đọc sách cơ bản</li>
+                <li><i class="fa fa-check"></i>Lưu lịch sử đọc sách</li>
+                <li><i class="fa fa-check"></i>Lưu sách vào tủ</li>
+                <li><i class="fa fa-check"></i>Đánh dấu trang</li>
+                <li><i class="fa fa-check"></i>Có quảng cáo</li>
+            </ul>
+        </div>
+        <div class="goi-footer">
+            @if (!isLoggedIn)
+            {
+                <a href="javascript:void(0)" class="goi-button login-btn" onclick="hienThongBaoDangNhap()">Đăng nhập</a>
+            }
+            else if (disableBasic)
+            {
+                <button class="goi-button disabled" disabled>Đã có</button>
+            }
+
+        </div>
+        
+    </div>
+
+    <!-- VIP -->
+    <div class="goi-box @(disableVip ? "disabled-card" : "rainbow-border")">
+        <div class="goi-content">
+            <div class="goi-label goi-de-xuat">Đề xuất</div>
+            <h3>VIP</h3>
+            <p class="gia">50.000 đ/tháng</p>
+            <hr class="goi-divider" />
+            <ul class="goi-quyen">
+                <li><i class="fa fa-check"></i>Toàn bộ tính năng cơ bản</li>
+                <li><i class="fa fa-check"></i>Không quảng cáo</li>
+                <li><i class="fa fa-check"></i>Có thể tải xuống sách</li>
+            </ul>
+        </div>
+        <div class="goi-footer">
+            @if (!isLoggedIn)
+            {
+                <a href="javascript:void(0)" class="goi-button login-btn" onclick="hienThongBaoDangNhap()">Đăng nhập</a>
+            }
+            else if (disableVip)
+            {
+                <button class="goi-button disabled" disabled>Đã có</button>
+            }
+            else
+            {
+                <button class="goi-button login-btn" onclick="muaGoi('c2')">Mua ngay</button>
+            }
+        </div>
+        
+    </div>
+
+    <!-- PREMIUM -->
+    <div class="goi-box @(disablePremium ? "disabled-card" : "green-border")">
+        <div class="goi-content">
+            <h3>Premium</h3>
+            <p class="gia">70.000 đ/tháng</p>
+            <hr class="goi-divider" />
+            <ul class="goi-quyen">
+                <li><i class="fa fa-check"></i>Toàn bộ tính năng VIP</li>
+                <li><i class="fa fa-check"></i>Hỗ trợ ưu tiên đề xuất sách</li>
+                <li><i class="fa fa-check"></i>Truy cập sớm các sách mới</li>
+            </ul>
+        </div>
+        <div class="goi-footer">
+            @if (!isLoggedIn)
+            {
+                <a href="javascript:void(0)" class="goi-button login-btn" onclick="hienThongBaoDangNhap()">Đăng nhập</a>
+            }
+            else if (disablePremium)
+            {
+                <button class="goi-button disabled" disabled>Đã có</button>
+            }
+            else
+            {
+                <button class="goi-button login-btn" onclick="muaGoi('c3')">Mua ngay</button>
+            }
+
+        </div>
+       
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dichvu.css" />
+}
+@section Scripts {
+    <script>
+        function muaGoi(maCap) {
+            fetch('/Mua/MuaGoi', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maCap: maCap })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Mua gói thành công!',
+                            showConfirmButton: false,
+                            timer: 2000,
+                        });
+                        setTimeout(() => location.reload(), 2200);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi!',
+                            text: data.message
+                        });
+                    }
+                });
+        }
+        function hienThongBaoDangNhap() {
+            Swal.fire({
+                title: 'Bạn cần đăng nhập!',
+                text: 'Vui lòng đăng nhập để tiếp tục.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ok',
+                cancelButtonText: 'Hủy',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                    window.location.href = `/TaiKhoan/DangNhap?returnUrl=${returnUrl}`;
+                }
+            });
+        }
+
+    </script>
+}

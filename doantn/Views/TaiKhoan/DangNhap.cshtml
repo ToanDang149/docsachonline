@@ -1,0 +1,92 @@
+﻿@model doantn.ViewModel.DangNhapViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutGuest.cshtml";
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="register-container">
+    <div class="image-box">
+        <a href="/home"><img src="~/images/logo.png" alt="Login illustration" /></a>
+        <div class="login-link">
+            <a href="/TaiKhoan/DangKy">Tạo tài khoản</a>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="form-box">
+        <h2>Đăng nhập</h2>
+        <form asp-action="DangNhap" method="post">
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+            <div class="input-box">
+                <span class="icon"><i class="fas fa-user"></i></span>
+                <input asp-for="TaiKhoan" placeholder="Tài khoản" />
+                <span asp-validation-for="TaiKhoan" class="text-danger"></span>
+            </div>
+
+            <div class="input-box">
+                <span class="icon"><i class="fas fa-lock"></i></span>
+                <input asp-for="MatKhau" type="password" placeholder="Mật khẩu" />
+                <span asp-validation-for="MatKhau" class="text-danger"></span>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="remember" />
+                <label class="form-check-label" for="remember">Remember me</label>
+            </div>
+
+            <button type="submit" class="btn-register">Đăng Nhập </button>
+
+            <div class="divider-text">
+                <span>HOẶC</span>
+            </div>
+
+            <div class="social-button-group">
+                <a href="#" class="social-btn facebook-btn">
+                    <i class="fab fa-facebook-f"></i> Facebook
+                </a>
+                <a href="#" class="social-btn google-btn">
+                    <i class="fab fa-google"></i> Google
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/DangNhap.css" />
+}
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            @if (TempData["DangNhapError"] != null)
+            {
+                <text>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Đăng nhập thất bại',
+                            text: '@Html.Raw(TempData["DangNhapError"])',
+                            confirmButtonColor: '#2e7d32'
+                        });
+                </text>
+            }
+
+            @if (TempData["DangNhapSuccess"] != null)
+            {
+                <text>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đăng nhập thành công!',
+                        text: '@Html.Raw(TempData["DangNhapSuccess"])',
+                        confirmButtonColor: '#2e7d32',
+                        timer: 1000,
+                        willClose: () => {
+                            window.location.href = '@(string.IsNullOrEmpty(Context.Request.Query["returnUrl"]) ? Url.Action("Index", "Home") : Context.Request.Query["returnUrl"].ToString())';
+                        }
+                    });
+                </text>
+            }
+        });
+    </script>
+}
+
+

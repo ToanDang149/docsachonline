@@ -1,0 +1,22 @@
+﻿.btn-delete-book {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(220, 53, 69, 0.8);
+    border: none;
+    color: white;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 1; 
+    transition: background-color 0.3s;
+}
+
+.btn-delete-book:hover {
+    background-color: rgba(220, 53, 69, 1);
+}

@@ -1,0 +1,178 @@
+﻿@model List<doantn.Models.Sach>
+
+<div class="category-header">
+    <div class="category-title">Tủ sách của bạn</div>
+    <div class="breadcrumb">
+        <a href="/">Trang chủ </a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">Tủ sách</span>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="chua">Bạn chưa lưu sách nào.</p>
+}
+else
+{
+    <div class="book-grid1">
+        @foreach (var book in Model)
+        {
+            <div class="book-card1" data-masach="@book.MaSach">
+                <a asp-controller="Sach" asp-action="ChiTiet" asp-route-maSach="@book.MaSach">
+                    <img src="@book.Anh" alt="@book.TenSach" />
+                </a>
+                <button class="btn-delete-book" onclick="xoaKhoiTuSach('@book.MaSach', this)">
+                    <i class="fa fa-trash"></i>
+                </button>
+                <div class="book-stats1">
+                    <span class="views1"><i class="fa fa-eye"></i> @book.LuotXem xem</span>
+                    <span class="downloads1"><i class="fa fa-download"></i> @book.LuotTai</span>
+                </div>
+                <div class="book-label1">@book.TenLoai</div>
+                <h4 class="book-title1">@book.TenSach</h4>
+
+                <div class="book-hover-info">
+                    <div class="hover-content">
+                        <div class="hover-left">
+                            <img class="hover-img" src="" alt="Ảnh sách" />
+                        </div>
+                        <div class="hover-right">
+                            <h3 class="hover-title">Tên sách</h3>
+                            <div class="hover-author">Tác giả: <span class="hover-author-name"></span></div>
+                            <div class="hover-stats">
+                                <div class="stat-button view">
+                                    <i class="fa fa-eye"></i> <span class="hover-luotxem">0</span>
+                                </div>
+                                <div class="stat-button download">
+                                    <i class="fa fa-download"></i> <span class="hover-luottai">0</span>
+                                </div>
+                            </div>
+                            <div class="hover-rating">
+                                <span class="rating-star"><span class="hover-trungbinhsao">1</span><i class="fa fa-star"></i> </span>
+                                <span class="rating-count">( <span class="hover-soluongdanhgia">1</span> đánh giá )</span>
+                            </div>
+                            <p class="hover-description">Giới thiệu sách...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+@section Scripts {
+    <script>
+        function xoaKhoiTuSach(maSach, button) {
+            Swal.fire({
+                title: 'Bạn chắc chắn muốn xóa sách này?',
+                text: "Sách sẽ bị xóa khỏi tủ sách của bạn!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Gỡ sách',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/TuSach/Xoa', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ maSach: maSach })
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                button.closest('.book-card1').remove();
+                                if (document.querySelectorAll('.book-card1').length === 0) {
+                                    document.querySelector('.book-grid1').innerHTML = `
+                                            <p class="chua1" padding: 81px 447px>Bạn chưa lưu sách nào.</p>
+                                `;
+                                }
+                                Swal.fire(
+                                    'Đã xóa!',
+                                    'Sách đã được gỡ khỏi tủ sách của bạn.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire('Lỗi', 'Xóa thất bại. Vui lòng thử lại!', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Lỗi', 'Đã xảy ra lỗi, thử lại sau!', 'error');
+                        });
+                }
+            });
+        }
+    </script>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/sachchitiet.css" />
+    <link rel="stylesheet" href="~/css/tusach.css" />
+    <link rel="stylesheet" href="~/css/xoa.css" />
+    <link rel="stylesheet" href="~/css/popuo.css" />
+}
+<script>
+    document.querySelectorAll('.book-card1').forEach(card => {
+        const popup = card.querySelector('.book-hover-info');
+        card.addEventListener('mouseenter', async function () {
+            const maSach = this.dataset.masach;
+            if (!maSach) return;
+            const rect = this.getBoundingClientRect();
+            const spaceRight = window.innerWidth - rect.right;
+            const popupWidth = 400;
+            if (spaceRight < popupWidth + 20) {
+                popup.style.left = 'auto';
+                popup.style.right = '105%';
+            } else {
+                popup.style.right = 'auto';
+                popup.style.left = '105%';
+            }
+            if (!this.dataset.loaded) {
+                try {
+                    const response = await fetch(`/Home/GetSachChiTiet?maSach=${maSach}`);
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        popup.querySelector('.hover-img').src = data.anh || '/images/default.png';
+                        popup.querySelector('.hover-title').innerText = data.tenSach || 'Không có tên';
+                        popup.querySelector('.hover-author-name').innerText = data.tenTacGia || 'Không rõ';
+                        popup.querySelector('.hover-luotxem').innerText = data.luotXem || '0';
+                        popup.querySelector('.hover-luottai').innerText = data.luotTai || '0';
+                        popup.querySelector('.hover-trungbinhsao').innerText = data.trungBinhSao || '0';
+                        popup.querySelector('.hover-soluongdanhgia').innerText = data.soLuongDanhGia || '0';
+                        popup.querySelector('.hover-description').innerText = (data.gioiThieu || '').substring(0, 200) + "...";
+
+                        this.dataset.loaded = "true";
+                    }
+                } catch (error) {
+                    console.error('Không thể lấy chi tiết sách:', error);
+                }
+            }
+            popup.style.display = 'flex';
+            popup.style.transition = 'opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease';
+            popup.style.opacity = '1';
+            popup.style.visibility = 'visible';
+            popup.style.transform = 'translateX(0) scale(1)';
+        });
+        card.addEventListener('mouseleave', function () {
+            const popup = this.querySelector('.book-hover-info');
+            popup.style.display = 'none';
+            popup.style.transition = 'none';
+            popup.style.opacity = '0';
+            popup.style.visibility = 'hidden';
+            popup.style.transform = 'translateX(20px) scale(0.95)';
+        });
+        popup.addEventListener('mouseenter', function (e) {
+            popup.style.display = 'flex';
+            popup.style.transition = 'none';
+            popup.style.opacity = '0';
+            popup.style.visibility = 'hidden';
+            popup.style.transform = 'translateX(20px) scale(0.95)';
+            e.stopPropagation();
+        });
+    });
+</script>
+
