@@ -1,6 +1,7 @@
 ﻿@model List<doantn.Models.Sach>
-
-
+@{
+    ViewData["Title"] = "Lịch sử đọc";
+}
 <div class="category-header">
     <div class="category-title">Sách đã đọc</div>
     <div class="breadcrumb">
@@ -21,7 +22,7 @@ else
         @foreach (var book in Model)
         {
             <a asp-controller="Sach" asp-action="ChiTiet" asp-route-maSach="@book.MaSach" class="book-card1" data-masach="@book.MaSach">
-                <img src="@book.Anh" alt="@book.TenSach" />
+                <img src="@book.Anh" alt="@book.TenSach" />     
                 <div class="book-stats1">
                     <span class="views1">
                         <i class="fa fa-eye"></i> @book.LuotXem xem

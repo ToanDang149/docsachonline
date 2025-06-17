@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Chọn gói dịch vụ";
+    ViewData["Title"] = "Mua dịch vụ";
     var isLoggedIn = Context.Session.GetString("MaKhachHang") != null;
     var currentCap = Context.Session.GetString("Cap") ?? "c1";
     var disableBasic = isLoggedIn && (currentCap == "c1" || currentCap == "c2" || currentCap == "c3");

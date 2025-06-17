@@ -21,6 +21,7 @@ namespace doantn.Services
             var sql = @"SELECT TOP 1 * FROM FileSach WHERE MaSach = @maSach AND LoaiFile = @dinhDang";
             return await conn.QueryFirstOrDefaultAsync<FileSach>(sql, new { maSach, dinhDang });
         }
+
         public async Task<List<FileSach>> GetDanhSachFile(string maSach)
         {
             using var conn = new SqlConnection(_connectionString);
@@ -28,6 +29,7 @@ namespace doantn.Services
             var result = await conn.QueryAsync<FileSach>(sql, new { maSach });
             return result.ToList();
         }
+
         public async Task<bool> GhiLichSuTaiNeuChuaCo(string maSach, string maKhachHang)
         {
             using var conn = new SqlConnection(_connectionString);

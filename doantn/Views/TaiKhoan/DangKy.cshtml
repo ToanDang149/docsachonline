@@ -93,6 +93,9 @@
                 const matKhau = matKhauInput.value;
                 const soDT = soDTInput.value.trim();
                 const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+                if (1) {
+                    return;
+                }
                 if (/\d/.test(hoTen)) {
                     e.preventDefault();
                     Swal.fire({

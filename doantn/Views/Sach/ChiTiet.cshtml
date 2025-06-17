@@ -427,8 +427,7 @@ else
                         cancelButtonText: 'Hủy',
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            const returnUrl = encodeURIComponent(location.pathname + location.search);
-                            window.location.href = `/TaiKhoan/DangNhap?returnUrl=${returnUrl}`;
+                            window.location.href = `/Mua/DichVu`;
                         }
                     });
                     break;

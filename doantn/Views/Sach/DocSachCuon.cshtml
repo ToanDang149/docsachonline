@@ -1,7 +1,7 @@
 ﻿@model doantn.ViewModel.SachChiTietViewModel
 
 @{
-    ViewData["Title"] = "docsach";
+    ViewData["Title"] = "Đọc sách";
     Layout = "~/Views/Shared/_LayoutDocCuon.cshtml";
     int lineNumber = 1;
     int chuongIndex = 1;
@@ -198,37 +198,36 @@
                     SoDong: line
                 })
             })
-                .then(async res => {
-                    if (!res.ok) {
-                        const errorText = await res.text();
-                        console.error("Lỗi server:", errorText);
-                        alert("Có lỗi xảy ra khi lưu bookmark!");
-                        return;
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    if (data?.success) {
-                        btn.classList.add("marked");
+            .then(async res => {
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error("Lỗi server:", errorText);
+                    alert("Có lỗi xảy ra khi lưu bookmark!");
+                    return;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data?.success) {
+                    btn.classList.add("marked");
+                    const li = document.createElement('li');
+                    li.className = 'bookmark-item';
+                    li.innerHTML = `<strong>${tenChuong}</strong> - đoạn ${line}`;
+                    li.onclick = () => {
+                        const el = document.getElementById(`line-${line}`);
+                        if (el) {
+                            const y = el.getBoundingClientRect().top + window.pageYOffset - 60;
+                            window.scrollTo({ top: y, behavior: 'smooth' });
 
-                        const li = document.createElement('li');
-                        li.className = 'bookmark-item';
-                        li.innerHTML = `<strong>${tenChuong}</strong> - dòng ${line}`;
-                        li.onclick = () => {
-                            const el = document.getElementById(`line-${line}`);
-                            if (el) {
-                                const y = el.getBoundingClientRect().top + window.pageYOffset - 60;
-                                window.scrollTo({ top: y, behavior: 'smooth' });
-
-                                el.classList.add('highlighted');
-                                setTimeout(() => {
-                                    el.classList.remove('highlighted');
-                                }, 3000);
-                            }
-                        };  
-                        document.querySelector('.bookmark-list').appendChild(li);
-                    }
-                });
+                            el.classList.add('highlighted');
+                            setTimeout(() => {
+                                el.classList.remove('highlighted');
+                            }, 3000);
+                        }
+                    };  
+                    document.querySelector('.bookmark-list').appendChild(li);
+                }
+            });
         }
         function getChuongTuDong(line) {
             let chuong = "";

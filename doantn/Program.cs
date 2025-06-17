@@ -25,6 +25,7 @@ namespace doantn
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IBookMarkService, BookMarkService>();
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddSwaggerGen();
             builder.Services.AddSession();
             var app = builder.Build();
             app.UseSession();
@@ -46,7 +47,8 @@ namespace doantn
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
-
+            app.UseSwagger();
+            app.UseSwaggerUI();
             app.Run();
         }
     }

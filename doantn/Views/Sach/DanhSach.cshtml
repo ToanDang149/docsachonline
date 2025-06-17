@@ -2,6 +2,9 @@
 @{
     var firstBook = Model.DanhSachSach.FirstOrDefault();
 }
+@{
+    ViewData["Title"] = firstBook.TenLoai;
+}
 @if (firstBook != null)
 {
     <div class="category-header">

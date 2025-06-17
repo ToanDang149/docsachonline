@@ -206,8 +206,9 @@
 
 .updating-text {
     color: #888;
-    margin-left: 600px;
+    padding-right: 131px;
     font-style: italic;
+    text-align: right
 }
 
 

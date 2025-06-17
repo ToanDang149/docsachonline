@@ -17,7 +17,6 @@ namespace doantn.Services
         public async Task<List<ThongKeTheoNgayViewModel>> GetLuotXemTheoKhoangDayDu(string maSach, DateTime from, DateTime to)
         {
             using var conn = new SqlConnection(_connectionString);
-
             var sql = @"
                 SELECT 
                     CAST(ThoiGianXem AS DATE) AS Ngay, 
@@ -26,10 +25,8 @@ namespace doantn.Services
                 WHERE MaSach = @MaSach AND ThoiGianXem BETWEEN @From AND @To
                 GROUP BY CAST(ThoiGianXem AS DATE)
             ";
-
             var data = (await conn.QueryAsync<ThongKeTheoNgayViewModel>(sql, new { MaSach = maSach, From = from, To = to }))
                        .ToDictionary(x => x.Ngay.Date, x => x.SoLuot);
-
             var result = new List<ThongKeTheoNgayViewModel>();
             for (var date = from.Date; date <= to.Date; date = date.AddDays(1))
             {
@@ -39,7 +36,6 @@ namespace doantn.Services
                     SoLuot = data.ContainsKey(date) ? data[date] : 0
                 });
             }
-
             return result;
         }
         public async Task<List<ThongKeTheoNgayViewModel>> GetLuotTaiTheoKhoangDayDu(string maSach, DateTime from, DateTime to)

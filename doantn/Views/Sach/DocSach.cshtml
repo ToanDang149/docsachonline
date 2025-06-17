@@ -1,7 +1,7 @@
 ﻿@model doantn.ViewModel.SachChiTietViewModel
 
 @{
-    ViewData["Title"] = "docsach";
+    ViewData["Title"] = "Đọc sách";
     Layout = "~/Views/Shared/_LayoutDoc.cshtml";
 }
 
@@ -87,6 +87,7 @@
 @section Scripts {
     <script>
         const chuongData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChuongNoiDung));
+        console.log(chuongData);
         let currentPageIndex = 0;
         let pages = []; 
         let bookmarks = [];
